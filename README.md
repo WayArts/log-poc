@@ -8,10 +8,10 @@ and helps in learning how to rest. Like: feel yourself safe during the rest peri
 (or almost anything), which means you turn OFF discomfort that makes you feel the need to act, and feel yourself <br>
 safe during the work period if you do work, which means you turn ON discomfort that makes you feel the need to act, <br>
 but you turn OFF discomfort if you act. <br>
-*Remark: we only like things that help us get away from discomfort, so those who might think that basing work on discomfort <br>
-is bad don't realize that they themselves are doing things in the first place because if they don't, they will feel discomfort. <br>
-Pleasant emotions are only born when the discomfort goes away. If there is no discomfort, there will be no pleasant <br>
-emotions, and there will be no action.<br>*
+*Remark: we only like things that help us get away from discomfort, so those who might think that basing work on <br>
+discomfort is bad don't realize that they themselves are doing things in the first place because if they don't, <br>
+they will feel discomfort. Pleasant emotions are only born when the discomfort goes away. If there is no discomfort, <br>
+there will be no pleasant emotions, and there will be no action.<br>*
 
 ### Technologies
 Flutter
