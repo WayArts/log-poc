@@ -10,8 +10,8 @@ safe during the work period if you do work, which means you turn ON discomfort t
 but you turn OFF discomfort if you act. <br>
 *Remark: we only like things that help us get away from discomfort, so those who might think that basing work on discomfort <br>
 is bad don't realize that they themselves are doing things in the first place because if they don't, they will feel discomfort. <br>
-Pleasant emotions are only born when the discomfort goes away. If there is no discomfort, there will be no pleasant emotions,<br>
-and there will be no action.<br>*
+Pleasant emotions are only born when the discomfort goes away. If there is no discomfort, there will be no pleasant <br>
+emotions, and there will be no action.<br>*
 
 ### Technologies
 Flutter
