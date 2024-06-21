@@ -19,7 +19,8 @@ Flutter
 ### Functions
 Functions based on collected data from the wellbeing diary:<br>
 - Collect HR from Bluetooth monitor;
-- Analise HR and body some parameters to estimate calories burned per day;
+- Analise HR and some body parameters to estimate calories burned per day;
 - Give access to convenient timers for tracking work/rest time;
 - Collect work/rest time;
-- Store time-series
+- Store time-series;
+- Provide *some* diary to view data history;
