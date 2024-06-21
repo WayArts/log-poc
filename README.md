@@ -6,8 +6,8 @@ It collects data about HR and some health parameters, analyzes it, like estimate
 Also it helps to organize activities, provides convenient timers, collects data about working hours,<br>
 and helps in learning how to rest. Like: feel yourself safe during the rest period if you don't do anything<br>
 (or almost anything), which means you turn OFF discomfort that makes you feel the need to act, and feel yourself <br>
-safe during the work period if you do work, which means you turn ON discomfort that makes you feel the need to act, <br>
-but you turn OFF discomfort if you act. <br>
+safe during the work period if you do work, which means you turn ON discomfort that makes you feel the need to <br>
+act, but you turn OFF discomfort if you act. <br>
 *Remark: we only like things that help us get away from discomfort, so those who might think that basing work on <br>
 discomfort is bad don't realize that they themselves are doing things in the first place because if they don't, <br>
 they will feel discomfort. Pleasant emotions are only born when the discomfort goes away. If there is no discomfort, <br>
