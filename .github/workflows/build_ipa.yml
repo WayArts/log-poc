@@ -7,6 +7,7 @@ jobs:
   build-ios:
     name: 🎉 iOS Build
     runs-on: macos-latest
+
     steps:
       - uses: actions/checkout@v3
 
@@ -14,13 +15,26 @@ jobs:
         with:
           channel: 'stable'
           architecture: x64
+
       - run: flutter pub get
-      
 
       - run: pod repo update
         working-directory: ios
 
-      - run: flutter build ios --release --no-codesign
+      - name: Decode and install certificates
+        run: |
+          echo "$P12_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
+          echo "$PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          security create-keychain -p actions /tmp/ios-build.keychain
+          security import /tmp/certificate.p12 -k /tmp/ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -s /tmp/ios-build.keychain
+          security default-keychain -s /tmp/ios-build.keychain
+          security unlock-keychain -p actions /tmp/ios-build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Build iOS app
+        run: flutter build ios --release --no-codesign
 
       - run: mkdir Payload
         working-directory: build/ios/iphoneos
@@ -28,15 +42,15 @@ jobs:
       - run: mv Runner.app/ Payload
         working-directory: build/ios/iphoneos
 
-      - name: Zip output
+      - name: Create IPA
         run: zip -qq -r -9 FlutterIpaExport.ipa Payload
         working-directory: build/ios/iphoneos
 
-      - name: Upload binaries to release
+      - name: Upload IPA to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/ios/iphoneos/FlutterIpaExport.ipa
           tag: v1.0
           overwrite: true
-          body: "This is first release"
+          body: "This is the first release"
