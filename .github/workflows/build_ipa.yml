@@ -9,6 +9,15 @@ jobs:
     runs-on: macos-latest
 
     steps:
+      - name: echo TEST_VAR
+        run: |
+          echo "$TEST_VAR"
+
+      - name: echo CERTIFICATE
+        run: |
+          echo "$P12_CERTIFICATE" | base64 --decode > "/tmp/i_am_just_a_file.txt"
+          cat "/tmp/i_am_just_a_file.txt"
+      
       - uses: actions/checkout@v3
 
       - uses: subosito/flutter-action@v2
@@ -20,14 +29,6 @@ jobs:
 
       - run: pod repo update
         working-directory: ios
-
-      - name: echo CERTIFICATE
-        run: echo "$P12_CERTIFICATE" | base64 --decode > "/tmp/i_am_just_a_file.txt"; do
-                cat "/tmp/i_am_just_a_file.txt"
-             done
-
-      - name: echo CERTIFICATE
-        run: echo "$P12_CERTIFICATE" | base64 --decode > "/tmp/i_am_just_a_file.txt"; do cat "/tmp/i_am_just_a_file.txt" done
 
       - name: Decode and install certificates
         run: |
