@@ -21,6 +21,8 @@ jobs:
       - run: pod repo update
         working-directory: ios
 
+      - run: echo "$P12_CERTIFICATE"
+
       - name: Decode and install certificates
         run: |
           echo "$P12_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
