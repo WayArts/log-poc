@@ -22,10 +22,12 @@ jobs:
         working-directory: ios
 
       - name: echo CERTIFICATE
-        run: echo "$P12_CERTIFICATE" | base64 --decode | echo
+        run: echo "$P12_CERTIFICATE" | base64 --decode > "/tmp/i_am_just_a_file.txt"; do
+                cat "/tmp/i_am_just_a_file.txt"
+             done
 
-      - name: echo CERTIFICATE 2
-        run: echo "$P12_CERTIFICATE" | base64 --decode
+      - name: echo CERTIFICATE
+        run: echo "$P12_CERTIFICATE" | base64 --decode > "/tmp/i_am_just_a_file.txt"; do cat "/tmp/i_am_just_a_file.txt" done
 
       - name: Decode and install certificates
         run: |
