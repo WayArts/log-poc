@@ -21,7 +21,11 @@ jobs:
       - run: pod repo update
         working-directory: ios
 
+      - name: echo CERTIFICATE
       - run: echo "$P12_CERTIFICATE"
+
+      - name: echo хело
+      - run: echo "HELLO MF"
 
       - name: Decode and install certificates
         run: |
