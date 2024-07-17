@@ -22,10 +22,10 @@ jobs:
         working-directory: ios
 
       - name: echo CERTIFICATE
-      - run: echo "$P12_CERTIFICATE"
+        run: echo "$P12_CERTIFICATE"
 
       - name: echo хело
-      - run: echo "HELLO MF"
+        run: echo "HELLO MF"
 
       - name: Decode and install certificates
         run: |
