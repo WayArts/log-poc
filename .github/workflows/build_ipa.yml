@@ -11,12 +11,15 @@ jobs:
     steps:
       - name: echo TEST_VAR
         run: |
-          echo "$TEST_VAR"
+          echo "${{ secrets.TEST_VAR }}"
 
       - name: echo CERTIFICATE
         run: |
-          echo "$P12_CERTIFICATE" | base64 --decode > "/tmp/i_am_just_a_file.txt"
+          echo "${{ secrets.P12_CERTIFICATE }}" | base64 --decode > "/tmp/i_am_just_a_file.txt"
           cat "/tmp/i_am_just_a_file.txt"
+
+      - name: echo CERTIFICATE 2
+        run: echo "${{ secrets.P12_CERTIFICATE }}"
       
       - uses: actions/checkout@v3
 
