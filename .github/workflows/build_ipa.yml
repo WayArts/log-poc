@@ -34,7 +34,7 @@ jobs:
           cp /tmp/profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Build iOS app
-        run: flutter build ios --release -allowProvisioningUpdates
+        run: flutter build ios --release --allowProvisioningUpdates
 
       - name: Create IPA
         run: |
