@@ -9,18 +9,6 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: echo TEST_VAR
-        run: |
-          echo "${{ vars.TEST_VAR }}"
-
-      - name: echo CERTIFICATE
-        run: |
-          echo "${{ vars.P12_CERTIFICATE }}" | base64 --decode > "/tmp/i_am_just_a_file.txt"
-          cat "/tmp/i_am_just_a_file.txt"
-
-      - name: echo CERTIFICATE 2
-        run: echo "${{ vars.P12_CERTIFICATE }}"
-      
       - uses: actions/checkout@v3
 
       - uses: subosito/flutter-action@v2
@@ -35,10 +23,10 @@ jobs:
 
       - name: Decode and install certificates
         run: |
-          echo "$P12_CERTIFICATE" | base64 --decode > /tmp/certificate.p12
-          echo "$PROVISIONING_PROFILE" | base64 --decode > /tmp/profile.mobileprovision
+          echo "${{ vars.P12_CERTIFICATE }}" | base64 --decode > /tmp/certificate.p12
+          echo "${{ vars.PROVISIONING_PROFILE }}" | base64 --decode > /tmp/profile.mobileprovision
           security create-keychain -p actions /tmp/ios-build.keychain
-          security import /tmp/certificate.p12 -k /tmp/ios-build.keychain -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security import /tmp/certificate.p12 -k /tmp/ios-build.keychain -P "${{ vars.P12_PASSWORD }}" -T /usr/bin/codesign
           security list-keychains -s /tmp/ios-build.keychain
           security default-keychain -s /tmp/ios-build.keychain
           security unlock-keychain -p actions /tmp/ios-build.keychain
