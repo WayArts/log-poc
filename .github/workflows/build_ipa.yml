@@ -60,10 +60,22 @@ jobs:
       - name: test
         run: |
           ls
-          cd build/ios
+          echo "__build/ios/"
+          cd build/ios/
           ls
+          echo "__iphoneos/"
           cd iphoneos/
           ls
+          echo "__../../../"
+          cd ../../../
+          ls
+          echo "__ios"
+          cd ios
+          ls
+          echo "__../../"
+          cd ../../
+          ls
+
 
       - name: Create IPA
         run: |
