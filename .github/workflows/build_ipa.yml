@@ -13,7 +13,7 @@ jobs:
         run: /usr/bin/xcodebuild -version
         
       - name: checkout repository
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - uses: subosito/flutter-action@v2
         with:
