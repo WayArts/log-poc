@@ -57,13 +57,21 @@ jobs:
       - name: Build iOS app
         run: flutter build ios --release
 
+      - name: test
+        run: |
+          ls
+          cd build/ios
+          ls
+          cd iphoneos/
+          ls
+
       - name: Create IPA
         run: |
-          cd ios
+          cd build/ios
           xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportPath build/Runner.ipa \
-            -exportOptionsPlist ExportOptions.plist
+            -archivePath Runner.xcarchive \
+            -exportPath Runner.ipa \
+            -exportOptionsPlist ../../ios/ExportOptions.plist
 
       - name: Upload IPA to release
         uses: svenstaro/upload-release-action@v2
