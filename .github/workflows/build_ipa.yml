@@ -75,7 +75,16 @@ jobs:
           echo "__../../"
           cd ../../
           ls
+    
+      - name: Create archive
+        run: |
+          tar -czvf archive.tar.gz .
 
+      - name: Upload archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: repository-archive
+          path: archive.tar.gz
 
       - name: Create IPA
         run: |
