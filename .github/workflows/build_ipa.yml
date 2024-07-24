@@ -69,16 +69,6 @@ jobs:
                      -archivePath $GITHUB_WORKSPACE/build/ios/archive/Runner.xcarchive \
                      archive
 
-      - name: Create archive 1
-        run: |
-          tar -czvf archive1.tar.gz .
-
-      - name: Upload archive 1
-        uses: actions/upload-artifact@v2
-        with:
-          name: repository-archive-1
-          path: archive1.tar.gz
-
       - name: Export IPA
         run: |
           xcodebuild -exportArchive \
@@ -86,21 +76,21 @@ jobs:
                      -exportPath $GITHUB_WORKSPACE/build/ios/ipa \
                      -exportOptionsPlist ios/ExportOptions.plist
 
-      - name: Create archive 2
-        run: |
-          tar -czvf archive2.tar.gz .
-
-      - name: Upload archive 2
-        uses: actions/upload-artifact@v2
-        with:
-          name: repository-archive-2
-          path: archive2.tar.gz
-
       - name: Upload IPA to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/ipa/Runner.ipa
-          tag: v1.0
+          file: build/ios/ipa/log_poc.ipa
+          tag: v${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ vars.PATCH }}
           overwrite: true
           body: "Test release"
+
+      # - name: Create archive
+      #   run: |
+      #     tar -czvf archive.tar.gz .
+
+      # - name: Upload archive
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: repository-archive
+      #     path: archive2.tar.gz
