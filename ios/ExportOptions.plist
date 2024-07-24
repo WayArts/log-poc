@@ -3,13 +3,19 @@
 <plist version="1.0">
 <dict>
     <key>method</key>
-    <string>app-store</string>
+    <string>development</string>
+    <key>signingStyle</key>
+    <string>manual</string>
     <key>teamID</key>
-    <string>S52C5K37SF</string>
+    <string>K72XB5VS2J</string>
     <key>provisioningProfiles</key>
     <dict>
         <key>com.wayarts.log-poc</key>
         <string>YourProvisioningProfileName</string>
     </dict>
+    <key>compileBitcode</key>
+    <true/>
+    <key>thinning</key>
+    <string>&lt;none&gt;</string>
 </dict>
 </plist>
