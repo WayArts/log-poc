@@ -57,48 +57,39 @@ jobs:
       - name: Build iOS app
         run: flutter build ios --release
 
+      - name: Resolve Swift dependencies
+        run: xcodebuild -resolvePackageDependencies -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release
+
+      - name: Archive app
+        run: |
+          xcodebuild -workspace ios/Runner.xcworkspace \
+                     -scheme Runner \
+                     -configuration Release \
+                     -sdk iphoneos \
+                     -archivePath $GITHUB_WORKSPACE/build/ios/archive/Runner.xcarchive \
+                     archive
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+                     -archivePath $GITHUB_WORKSPACE/build/ios/archive/Runner.xcarchive \
+                     -exportPath $GITHUB_WORKSPACE/build/ios/ipa \
+                     -exportOptionsPlist ios/ExportOptions.plist
+
       - name: test
         run: |
+          echo "$GITHUB_WORKSPACE/build/ios"
+          cd $GITHUB_WORKSPACE/build/ios
           ls
-          echo "__build/ios/"
-          cd build/ios/
+          echo "$GITHUB_WORKSPACE/build/ios/ipa"
+          cd $GITHUB_WORKSPACE/build/ios/ipa
           ls
-          echo "__iphoneos/"
-          cd iphoneos/
-          ls
-          echo "__../../../"
-          cd ../../../
-          ls
-          echo "__ios"
-          cd ios
-          ls
-          echo "__../../"
-          cd ../../
-          ls
-    
-      - name: Create archive
-        run: |
-          tar -czvf archive.tar.gz .
-
-      - name: Upload archive
-        uses: actions/upload-artifact@v2
-        with:
-          name: repository-archive
-          path: archive.tar.gz
-
-      - name: Create IPA
-        run: |
-          cd build/ios
-          xcodebuild -exportArchive \
-            -archivePath Runner.xcarchive \
-            -exportPath Runner.ipa \
-            -exportOptionsPlist ../../ios/ExportOptions.plist
 
       - name: Upload IPA to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ios/build/Runner.ipa
+          file: build/ios/ipa/Runner.ipa
           tag: v1.0
           overwrite: true
-          body: "This is the first release"
+          body: "Test release"
