@@ -69,6 +69,16 @@ jobs:
                      -archivePath $GITHUB_WORKSPACE/build/ios/archive/Runner.xcarchive \
                      archive
 
+      - name: Create archive 1
+        run: |
+          tar -czvf archive1.tar.gz .
+
+      - name: Upload archive 1
+        uses: actions/upload-artifact@v2
+        with:
+          name: repository-archive-1
+          path: archive1.tar.gz
+
       - name: Export IPA
         run: |
           xcodebuild -exportArchive \
@@ -76,14 +86,15 @@ jobs:
                      -exportPath $GITHUB_WORKSPACE/build/ios/ipa \
                      -exportOptionsPlist ios/ExportOptions.plist
 
-      - name: test
+      - name: Create archive 2
         run: |
-          echo "$GITHUB_WORKSPACE/build/ios"
-          cd $GITHUB_WORKSPACE/build/ios
-          ls
-          echo "$GITHUB_WORKSPACE/build/ios/ipa"
-          cd $GITHUB_WORKSPACE/build/ios/ipa
-          ls
+          tar -czvf archive2.tar.gz .
+
+      - name: Upload archive 2
+        uses: actions/upload-artifact@v2
+        with:
+          name: repository-archive-2
+          path: archive2.tar.gz
 
       - name: Upload IPA to release
         uses: svenstaro/upload-release-action@v2
