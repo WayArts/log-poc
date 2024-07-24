@@ -81,7 +81,7 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/ios/ipa/log_poc.ipa
-          tag: v${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ vars.PATCH }}
+          tag: v${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ vars.PATCH_VERSION }}
           overwrite: true
           body: "Test release"
 
