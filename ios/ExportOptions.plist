@@ -3,15 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>method</key>
-    <string>development</string>
-    <key>signingStyle</key>
-    <string>manual</string>
+    <string>debugging</string>
     <key>teamID</key>
     <string>K72XB5VS2J</string>
     <key>provisioningProfiles</key>
     <dict>
         <key>com.wayarts.log-poc</key>
-        <string>YourProvisioningProfileName</string>
+        <string>iOS Team Provisioning Profile: com.wayarts.log-poc</string>
     </dict>
     <key>compileBitcode</key>
     <true/>
