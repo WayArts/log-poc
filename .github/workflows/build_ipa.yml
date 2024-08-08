@@ -23,12 +23,11 @@ jobs:
           channel: 'stable'
           architecture: x64
 
-      - name: flutter pub get
-        run: flutter pub get
+      - run: flutter pub get
         working-directory: ${{ env.WORKING_DIR }}
 
       - run: pod repo update
-        working-directory: ${{ env.WORKING_DIR }}\ios
+        working-directory: ${{ env.WORKING_DIR }}/ios
 
       - name: Install the Apple certificate and provisioning profile
         env:
