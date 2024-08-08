@@ -7,6 +7,9 @@ jobs:
   build-ios:
     name: 🎉 iOS Build
     runs-on: macos-latest
+    
+    env:
+      WORKING_DIR: log_poc
 
     steps:
       - name: check Xcode version
@@ -15,21 +18,17 @@ jobs:
       - name: checkout repository
         uses: actions/checkout@v3
 
-      - run: ls
-      
-      - run: cd ./log_poc
-
-      - run: ls
-
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           architecture: x64
 
-      - run: flutter pub get
+      - name: flutter pub get
+        run: flutter pub get
+        working-directory: ${{ env.WORKING_DIR }}
 
       - run: pod repo update
-        working-directory: ios
+        working-directory: ${{ env.WORKING_DIR }}\ios
 
       - name: Install the Apple certificate and provisioning profile
         env:
@@ -62,9 +61,11 @@ jobs:
 
       - name: Build iOS app
         run: flutter build ios --release
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Resolve Swift dependencies
         run: xcodebuild -resolvePackageDependencies -workspace ios/Runner.xcworkspace -scheme Runner -configuration Release
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Archive app
         run: |
@@ -72,15 +73,17 @@ jobs:
                      -scheme Runner \
                      -configuration Release \
                      -sdk iphoneos \
-                     -archivePath $GITHUB_WORKSPACE/build/ios/archive/Runner.xcarchive \
+                     -archivePath build/ios/archive/Runner.xcarchive \
                      archive
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Export IPA
         run: |
           xcodebuild -exportArchive \
-                     -archivePath $GITHUB_WORKSPACE/build/ios/archive/Runner.xcarchive \
-                     -exportPath $GITHUB_WORKSPACE/build/ios/ipa \
+                     -archivePath build/ios/archive/Runner.xcarchive \
+                     -exportPath build/ios/ipa \
                      -exportOptionsPlist ios/ExportOptions.plist
+        working-directory: ${{ env.WORKING_DIR }}
 
       - name: Upload IPA to release
         uses: svenstaro/upload-release-action@v2
