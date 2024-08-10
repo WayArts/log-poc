@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
+import 'package:flutter/services.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,71 +31,130 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _inputText = "";
-  List<int> _timersSixes = [];
+  List<int> _timersSizes = [];
+  List<int> _timersValues = [];
+  int _currentTimer = -1;
   final TextEditingController _controller = TextEditingController();
-  List<Widget> _timersViews = [];
+  bool _playing = false;
 
   void _addTimer() {
     setState(() {
-      _timersSixes.add(int.parse(_inputText));
+      if (_controller.text.isNotEmpty) {
+        var value = int.tryParse(_controller.text);
+        if (value != null && value > 0) {
+          _timersSizes.add(value);
+          _timersValues.add(value);
+          _controller.clear();
+        }
+      }
     });
   }
 
-  void _startTimer() {
+  void _playStopTimer() {
     setState(() {
-      _timersSixes.add(int.parse(_inputText));
+      _playing = !_playing;
+      
+    });
+  }
+
+  void _resetTimer() {
+    setState(() {
+      _timersSizes.clear();
+      _timersValues.clear();
+      _playing = false;
+      _currentTimer = 0;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView();
-    // // This method is rerun every time setState is called, for instance as done
-    // // by the _incrementCounter method above.
-    // //
-    // // The Flutter framework has been optimized to make rerunning build methods
-    // // fast, so that you can just rebuild anything that needs updating rather
-    // // than having to individually change instances of widgets.
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     // TRY THIS: Try changing the color here to a specific color (to
-    //     // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-    //     // change color while the other colors stay the same.
-    //     backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-    //     // Here we take the value from the MyHomePage object that was created by
-    //     // the App.build method, and use it to set our appbar title.
-    //     title: const Text("збс"),
-    //   ),
-    //   body: Center(
-    //     // Center is a layout widget. It takes a single child and positions it
-    //     // in the middle of the parent.
-    //     child: Column(
-    //       mainAxisAlignment: MainAxisAlignment.center,
-    //       children: <Widget>[
-    //         TextField(
-    //           controller: _controller,
-    //           decoration: const InputDecoration(
-    //             labelText: 'Enter number of secconds',
-    //             border: OutlineInputBorder(),
-    //           ),
-    //         ),
-    //         ListView(
-    //           children: _timersViews,
-    //         ),
-    //         FloatingActionButton(
-    //           onPressed: _startTimer,
-    //           tooltip: 'startTimer',
-    //           child: const Icon(Icons.start),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    //   floatingActionButton: FloatingActionButton(
-    //     onPressed: _addTimer,
-    //     tooltip: 'addTimer',
-    //     child: const Icon(Icons.add),
-    //   ), // This trailing comma makes auto-formatting nicer for build methods.
-    // );
+    var logger = Logger();
+    logger.d("_MyHomePageState build");
+
+    List<Text> timersViews = [];
+    
+    TextStyle usedTextStyle = const TextStyle(
+      color: Color.fromARGB(255, 216, 106, 98),
+      fontSize: 30,
+    );
+
+    TextStyle freshTextStyle = const TextStyle(
+      color: Color.fromARGB(255, 55, 117, 205),
+      fontSize: 30,
+    );
+
+    for (int i = 0; i < _timersValues.length; i++)
+    {
+      bool used = _currentTimer >= 0 && i <= _currentTimer;
+      timersViews.add(
+        Text(
+          _timersValues[i].toString(),
+          style: used ? usedTextStyle : freshTextStyle,
+        )
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: const Text("збс"),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const SizedBox(
+                  width: 50,
+                ),
+                SizedBox(
+                  width: 300,
+                  child: TextField(
+                    controller: _controller,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter number of secconds',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ),
+                FloatingActionButton(
+                  onPressed: _addTimer,
+                  tooltip: 'addTimer',
+                  child: const Icon(Icons.add),
+                ),
+              ]
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: timersViews
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                FloatingActionButton(
+                  onPressed: _playStopTimer,
+                  tooltip: 'playStopTimer',
+                  child: Icon(_playing ? Icons.pause : Icons.play_arrow),
+                ),
+                const SizedBox(
+                  width: 25,
+                ),
+                FloatingActionButton(
+                  onPressed: _resetTimer,
+                  tooltip: 'resetTimer',
+                  child: const Icon(Icons.refresh),
+                ),
+              ]
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
