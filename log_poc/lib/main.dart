@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:just_audio/just_audio.dart';
 
 void main() {
   runApp(const MyApp());
@@ -42,11 +42,25 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _playing = false;
   bool _finished = false;
   bool _addedNewAfterFinish = false;
+  final _timerEndedPlayer = AudioPlayer();
+  final _timersFinisedPlayer = AudioPlayer();
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+
+  @override
+  void initState()
+  {
+    super.initState();
+    _timerEndedPlayer.setAsset('TimerEnded.mp3');
+    _timerEndedPlayer.setVolume(0.7);
+    _timersFinisedPlayer.setAsset('TimersFinised.mp3');
+  }
 
   @override
   void dispose() {
     _dropTimer();
+    _timerEndedPlayer.dispose();
+    _timersFinisedPlayer.dispose();
     super.dispose();
   }
 
@@ -65,13 +79,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _timerEndNotify()
   {
-    _audioPlayer.play(AssetSource('TimerEnded.mp3'), volume: 0.7);
+    _timerEndedPlayer.stop().then((value) async {
+      await _timerEndedPlayer.seek(Duration.zero);
+      await _timerEndedPlayer.play();
+    });
   }
 
   void _timerFinished()
   {
     _playStopTimer();
-    _audioPlayer.play(AssetSource('TimersFinised.mp3'), volume: 1);
+    _timersFinisedPlayer.stop().then((value) async {
+      await _timersFinisedPlayer.seek(Duration.zero);
+      await _timersFinisedPlayer.play();
+    });
     _finished = true;
   }
 
