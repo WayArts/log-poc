@@ -62,14 +62,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _timerEndNotify()
   {
-    FlutterBeep.beep();
+    // FlutterBeep.beep();
   }
 
   void _timerFinished()
   {
     _playStopTimer();
-    FlutterBeep.beep();
-    FlutterBeep.beep();
+    // FlutterBeep.beep();
+    // FlutterBeep.beep();
     _finished = true;
   }
 
@@ -121,7 +121,6 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         _dropTimer();
       }
-
     });
   }
 
