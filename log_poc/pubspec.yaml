@@ -36,6 +36,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   logger: ^2.4.0
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +59,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/TimerEnded.mp3
+    - assets/TimersFinised.mp3
 
   # To add assets to your application, add an assets section, like this:
   # assets:

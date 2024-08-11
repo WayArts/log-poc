@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,6 +41,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
   bool _playing = false;
   bool _finished = false;
+  bool _addedNewAfterFinish = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void dispose() {
@@ -62,14 +65,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _timerEndNotify()
   {
-    // FlutterBeep.beep();
+    _audioPlayer.play(AssetSource('TimerEnded.mp3'), volume: 0.7);
   }
 
   void _timerFinished()
   {
     _playStopTimer();
-    // FlutterBeep.beep();
-    // FlutterBeep.beep();
+    _audioPlayer.play(AssetSource('TimersFinised.mp3'), volume: 1);
     _finished = true;
   }
 
@@ -85,9 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         _timerFinished();
       }
-    }
-
-    
+    }   
   }
 
   void _addTimer() {
@@ -98,6 +98,10 @@ class _MyHomePageState extends State<MyHomePage> {
           _timersSizes.add(value);
           _timersValues.add(value);
           _controller.clear();
+          if (_finished)
+          {
+            _addedNewAfterFinish = true;
+          }
         }
       }
     });
@@ -107,7 +111,18 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       if (_finished)
       {
-        _resetTimer();
+        if (_addedNewAfterFinish)
+        {
+          _addedNewAfterFinish = false;
+          _finished = false;
+          _currentTimer++;
+        } else {
+          _resetTimer();
+        }
+      }
+
+      if (_timersSizes.isEmpty) {
+        return;
       }
 
       _playing = !_playing;
@@ -128,6 +143,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       _timersValues = List.from(_timersSizes);
       _playing = false;
+      _finished = false;
+      _addedNewAfterFinish = false;
       _currentTimer = -1;
       _dropTimer();
     });
@@ -138,6 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
       _timersSizes.clear();
       _timersValues.clear();
       _playing = false;
+      _finished = false;
+      _addedNewAfterFinish = false;
       _currentTimer = -1;
       _dropTimer();
     });
