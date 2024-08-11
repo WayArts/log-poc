@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
@@ -31,11 +33,62 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<int> _timersSizes = [];
+  Timer? _timer;
+  final List<int> _timersSizes = [];
   List<int> _timersValues = [];
   int _currentTimer = -1;
   final TextEditingController _controller = TextEditingController();
   bool _playing = false;
+  bool _finished = false;
+
+  @override
+  void dispose() {
+    _dropTimer();
+    super.dispose();
+  }
+
+  void _dropTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _updateTimer();
+      });
+    });
+  }
+
+  void _timerEndNotify()
+  {
+    FlutterBeep.beep();
+  }
+
+  void _timerFinished()
+  {
+    _playStopTimer();
+    FlutterBeep.beep();
+    FlutterBeep.beep();
+    _finished = true;
+  }
+
+  void _updateTimer() {
+    _timersValues[_currentTimer]--;
+
+    if (_timersValues[_currentTimer] == 0)
+    {      
+      if (_currentTimer + 1 < _timersSizes.length)
+      {
+        _timerEndNotify();
+        _currentTimer++;
+      } else {
+        _timerFinished();
+      }
+    }
+
+    
+  }
 
   void _addTimer() {
     setState(() {
@@ -52,24 +105,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _playStopTimer() {
     setState(() {
+      if (_finished)
+      {
+        _resetTimer();
+      }
+
       _playing = !_playing;
-      
+
+      if (_playing) {
+        if (_currentTimer < 0) {
+          _currentTimer = 0;
+        }
+        
+        _startTimer();
+      } else {
+        _dropTimer();
+      }
+
     });
   }
 
   void _resetTimer() {
     setState(() {
+      _timersValues = List.from(_timersSizes);
+      _playing = false;
+      _currentTimer = -1;
+      _dropTimer();
+    });
+  }
+
+  void _clearTimer() {
+    setState(() {
       _timersSizes.clear();
       _timersValues.clear();
       _playing = false;
-      _currentTimer = 0;
+      _currentTimer = -1;
+      _dropTimer();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    var logger = Logger();
-    logger.d("_MyHomePageState build");
+    // var logger = Logger();
+    // logger.d("_MyHomePageState build");
 
     List<Text> timersViews = [];
     
@@ -149,6 +227,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: _resetTimer,
                   tooltip: 'resetTimer',
                   child: const Icon(Icons.refresh),
+                ),
+                const SizedBox(
+                  width: 25,
+                ),
+                FloatingActionButton(
+                  onPressed: _clearTimer,
+                  tooltip: 'clearTimer',
+                  child: const Icon(Icons.clear),
                 ),
               ]
             ),
