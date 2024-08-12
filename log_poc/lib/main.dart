@@ -44,16 +44,17 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _addedNewAfterFinish = false;
   final _timerEndedPlayer = AudioPlayer();
   final _timersFinisedPlayer = AudioPlayer();
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
 
   @override
   void initState()
   {
     super.initState();
-    _timerEndedPlayer.setAsset('TimerEnded.mp3');
-    _timerEndedPlayer.setVolume(0.7);
-    _timersFinisedPlayer.setAsset('TimersFinised.mp3');
+    () async {
+      await _timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
+      await _timerEndedPlayer.setVolume(0.7);
+      await _timersFinisedPlayer.setAsset('assets/TimersFinised.mp3');
+    } ();
   }
 
   @override
@@ -79,19 +80,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _timerEndNotify()
   {
-    _timerEndedPlayer.stop().then((value) async {
+    () async {
+      await _timerEndedPlayer.stop();
       await _timerEndedPlayer.seek(Duration.zero);
       await _timerEndedPlayer.play();
-    });
+    } ();
   }
 
   void _timerFinished()
   {
     _playStopTimer();
-    _timersFinisedPlayer.stop().then((value) async {
+    () async {
+      await _timersFinisedPlayer.stop();
       await _timersFinisedPlayer.seek(Duration.zero);
       await _timersFinisedPlayer.play();
-    });
+    } ();
     _finished = true;
   }
 
