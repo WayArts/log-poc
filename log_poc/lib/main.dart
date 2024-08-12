@@ -226,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   width: 50,
                 ),
                 SizedBox(
-                  width: 300,
+                  width: 225,
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
