@@ -8,8 +8,8 @@
     <string>K72XB5VS2J</string>
     <key>provisioningProfiles</key>
     <dict>
-        <key>com.wayarts.log-poc</key>
-        <string>iOS Team Provisioning Profile: com.wayarts.log-poc</string>
+        <key>com.wayarts.log_poc</key>
+        <string>iOS Team Provisioning Profile: com.wayarts.log_poc</string>
     </dict>
     <key>compileBitcode</key>
     <true/>
