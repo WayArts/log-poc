@@ -1,12 +1,142 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
+import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  initializeService();
   runApp(const MyApp());
+}
+
+Future<void> initializeService() async {
+  final service = FlutterBackgroundService();
+
+  await service.configure(
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      isForegroundMode: true,
+      autoStart: true,
+      notificationChannelId: 'my_foreground',
+      initialNotificationTitle: 'Background Service',
+      initialNotificationContent: 'Running background tasks',
+      foregroundServiceNotificationId: 888,
+      foregroundServiceType: AndroidForegroundType.mediaPlayback,
+    ),
+    iosConfiguration: IosConfiguration(
+      autoStart: true,
+      onForeground: onStart,
+      onBackground: onIosBackground,
+    ),
+  );
+
+  service.startService();
+}
+
+@pragma('vm:entry-point')
+Future<bool> onIosBackground(ServiceInstance service) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  DartPluginRegistrant.ensureInitialized();
+  return true;
+}
+
+class BackgroundEvents {
+  final onClose = 'onClose';
+  final onStart = 'onStart';
+  final onTimarTick = 'onTimarTick';
+
+}
+
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  // Only available for flutter 3.0.0 and later
+  DartPluginRegistrant.ensureInitialized();
+
+  final player = TimerPlayer();
+
+  player.initState(service);
+
+  service.on(method)
+}
+
+class TimerState {
+  List<int> timersSizes = [];
+  List<int> timersValues = [];
+  int currentTimer = -1;
+  bool playing = false;
+  bool finished = false;
+  bool addedNewAfterFinish = false;
+
+  TimerState();
+
+  TimerState.init(
+    this.timersSizes,
+    this.timersValues,
+    this.currentTimer,
+    this.playing,
+    this.finished,
+    this.addedNewAfterFinish
+  );
+
+  Map<String, dynamic> toJson() {
+    return {
+      'TimerState': this
+    };
+    // return {
+    //   'timersSizes': timersSizes,
+    // };
+    // timersSizes,
+    // this.timersValues,
+    // this.currentTimer,
+    // this.playing,
+    // this.finished,
+    // this.addedNewAfterFinish
+  }
+}
+
+class TimerPlayer {
+  Timer? _timer;
+  final _timerEndedPlayer = AudioPlayer();
+  final _timersFinisedPlayer = AudioPlayer();
+  ServiceInstance? _service;
+
+  void initState(ServiceInstance service) async {
+    TimerState s = TimerState();
+    s.addedNewAfterFinish;
+    _service = service;
+    () async {
+      await _timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
+      await _timerEndedPlayer.setVolume(0.7);
+      await _timersFinisedPlayer.setAsset('assets/TimersFinised.mp3');
+    } ();
+  }
+
+  void dispose() {
+    _dropTimer();
+    _timerEndedPlayer.dispose();
+    _timersFinisedPlayer.dispose();
+  }
+
+  void _dropTimer() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _updateTimer();
+      });
+    });
+  }
+
+
 }
 
 class MyApp extends StatelessWidget {
@@ -34,17 +164,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Timer? _timer;
-  final List<int> _timersSizes = [];
-  List<int> _timersValues = [];
-  int _currentTimer = -1;
   final TextEditingController _controller = TextEditingController();
-  bool _playing = false;
-  bool _finished = false;
-  bool _addedNewAfterFinish = false;
-  final _timerEndedPlayer = AudioPlayer();
-  final _timersFinisedPlayer = AudioPlayer();
-
 
   @override
   void initState()
@@ -63,19 +183,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _timerEndedPlayer.dispose();
     _timersFinisedPlayer.dispose();
     super.dispose();
-  }
-
-  void _dropTimer() {
-    _timer?.cancel();
-    _timer = null;
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _updateTimer();
-      });
-    });
   }
 
   void _timerEndNotify()
