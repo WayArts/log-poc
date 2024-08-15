@@ -47,9 +47,8 @@ Future<bool> onIosBackground(ServiceInstance service) async {
 }
 
 class BackgroundEvents {
-  final onClose = 'onClose';
-  final onStart = 'onStart';
-  final onTimarTick = 'onTimarTick';
+  static const addTimer = "addTimer";
+  static const stateUpdated = "stateUpdated";
 
 }
 
@@ -60,9 +59,9 @@ void onStart(ServiceInstance service) async {
 
   final player = TimerPlayer();
 
-  player.initState(service);
+  await player.initState(service);
 
-  service.on(method)
+  // TODO: player.dispose on app closing
 }
 
 class TimerState {
@@ -101,42 +100,128 @@ class TimerState {
 }
 
 class TimerPlayer {
-  Timer? _timer;
-  final _timerEndedPlayer = AudioPlayer();
-  final _timersFinisedPlayer = AudioPlayer();
-  ServiceInstance? _service;
+  Timer? timer;
+  final timerEndedPlayer = AudioPlayer();
+  final timersFinisedPlayer = AudioPlayer();
+  ServiceInstance? service;
+  TimerState state = TimerState();
 
-  void initState(ServiceInstance service) async {
-    TimerState s = TimerState();
-    s.addedNewAfterFinish;
-    _service = service;
-    () async {
-      await _timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
-      await _timerEndedPlayer.setVolume(0.7);
-      await _timersFinisedPlayer.setAsset('assets/TimersFinised.mp3');
-    } ();
+  Future<void> initState(ServiceInstance service) async {
+    this.service = service;
+    state = TimerState();
+
+    service.on(, );
+    
+    await timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
+    await timerEndedPlayer.setVolume(0.7);
+    await timersFinisedPlayer.setAsset('assets/TimersFinised.mp3');
   }
 
-  void dispose() {
-    _dropTimer();
-    _timerEndedPlayer.dispose();
-    _timersFinisedPlayer.dispose();
+  Future<void> dispose() async {
+    await dropTimer();
+    await timerEndedPlayer.dispose();
+    await timersFinisedPlayer.dispose();
   }
 
-  void _dropTimer() {
-    _timer?.cancel();
-    _timer = null;
+  Future<void> dropTimer() async {
+    timer?.cancel();
+    timer = null;
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _updateTimer();
-      });
+  void startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      updateTimer();
     });
   }
 
+  Future<void> timerEndNotify() async {
+    await timerEndedPlayer.stop();
+    await timerEndedPlayer.seek(Duration.zero);
+    await timerEndedPlayer.play();
+  }
 
+  Future<void> timerFinished() async {
+    playStopTimer();
+    
+    await timersFinisedPlayer.stop();
+    await timersFinisedPlayer.seek(Duration.zero);
+    await timersFinisedPlayer.play();
+    
+    state.finished = true;
+  }
+
+  Future<void> updateTimer() async {
+    service?.invoke(BackgroundEvents.stateUpdated, { "state": state } );
+    state.timersValues[state.currentTimer]--;
+
+    if (state.timersValues[state.currentTimer] == 0)
+    {      
+      if (state.currentTimer + 1 < state.timersSizes.length)
+      {
+        await timerEndNotify();
+        state.currentTimer++;
+      } else {
+        await timerFinished();
+      }
+    }   
+  }
+
+  void addTimer(int value) {
+    if (value > 0) {
+      state.timersSizes.add(value);
+      state.timersValues.add(value);
+      if (state.finished) {
+        state.addedNewAfterFinish = true;
+      }
+    }
+  }
+
+  Future<void> playStopTimer() async {
+    if (state.finished) {
+      if (state.addedNewAfterFinish) {
+        state.addedNewAfterFinish = false;
+        state.finished = false;
+        state.currentTimer++;
+      } else {
+        resetTimer();
+      }
+    }
+
+    if (state.timersSizes.isEmpty) {
+      return;
+    }
+
+    state.playing = !state.playing;
+
+    if (state.playing) {
+      if (state.currentTimer < 0) {
+        state.currentTimer = 0;
+      }
+        
+      startTimer();
+    } else {
+      dropTimer();
+    }
+  }
+
+  void resetTimer() {
+    state.timersValues = List.from(_timersSizes);
+    state.playing = false;
+    state.finished = false;
+    state.addedNewAfterFinish = false;
+    state.currentTimer = -1;
+    dropTimer();
+  }
+
+  void clearTimer() {
+    state.timersSizes.clear();
+    state.timersValues.clear();
+    state.playing = false;
+    state.finished = false;
+    state.addedNewAfterFinish = false;
+    state.currentTimer = -1;
+    dropTimer();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -170,54 +255,11 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState()
   {
     super.initState();
-    () async {
-      await _timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
-      await _timerEndedPlayer.setVolume(0.7);
-      await _timersFinisedPlayer.setAsset('assets/TimersFinised.mp3');
-    } ();
   }
 
   @override
   void dispose() {
-    _dropTimer();
-    _timerEndedPlayer.dispose();
-    _timersFinisedPlayer.dispose();
     super.dispose();
-  }
-
-  void _timerEndNotify()
-  {
-    () async {
-      await _timerEndedPlayer.stop();
-      await _timerEndedPlayer.seek(Duration.zero);
-      await _timerEndedPlayer.play();
-    } ();
-  }
-
-  void _timerFinished()
-  {
-    _playStopTimer();
-    () async {
-      await _timersFinisedPlayer.stop();
-      await _timersFinisedPlayer.seek(Duration.zero);
-      await _timersFinisedPlayer.play();
-    } ();
-    _finished = true;
-  }
-
-  void _updateTimer() {
-    _timersValues[_currentTimer]--;
-
-    if (_timersValues[_currentTimer] == 0)
-    {      
-      if (_currentTimer + 1 < _timersSizes.length)
-      {
-        _timerEndNotify();
-        _currentTimer++;
-      } else {
-        _timerFinished();
-      }
-    }   
   }
 
   void _addTimer() {
@@ -225,13 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (_controller.text.isNotEmpty) {
         var value = int.tryParse(_controller.text);
         if (value != null && value > 0) {
-          _timersSizes.add(value);
-          _timersValues.add(value);
-          _controller.clear();
-          if (_finished)
-          {
-            _addedNewAfterFinish = true;
-          }
+          FlutterBackgroundService().invoke(BackgroundEvents.addTimer, { "value": value })
         }
       }
     });
