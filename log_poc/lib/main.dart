@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:logger/logger.dart';
+// import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
-import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
+// import 'package:flutter_background_service_android/flutter_background_service_android.dart';
+// import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,12 +46,6 @@ Future<bool> onIosBackground(ServiceInstance service) async {
   return true;
 }
 
-class BackgroundEvents {
-  static const addTimer = "addTimer";
-  static const stateUpdated = "stateUpdated";
-
-}
-
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   // Only available for flutter 3.0.0 and later
@@ -62,6 +56,14 @@ void onStart(ServiceInstance service) async {
   await player.initState(service);
 
   // TODO: player.dispose on app closing
+}
+
+class BackgroundEvents {
+  static const stateUpdated = "stateUpdated";
+  static const addTimer = "addTimer";
+  static const playStopTimer = "playStopTimer";
+  static const resetTimer = "resetTimer";
+  static const clearTimer = "clearTimer";
 }
 
 class TimerState {
@@ -110,7 +112,26 @@ class TimerPlayer {
     this.service = service;
     state = TimerState();
 
-    service.on(, );
+    service.on(BackgroundEvents.addTimer).listen((data) {
+      if (data == null)
+      {
+        return;
+      }
+      
+      addTimer(data["value"]);
+    });
+
+    service.on(BackgroundEvents.clearTimer).listen((data) {
+      clearTimer();
+    });
+
+    service.on(BackgroundEvents.playStopTimer).listen((data) {
+      playStopTimer();
+    });
+
+    service.on(BackgroundEvents.resetTimer).listen((data) {
+      resetTimer();
+    });
     
     await timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
     await timerEndedPlayer.setVolume(0.7);
@@ -163,7 +184,9 @@ class TimerPlayer {
       } else {
         await timerFinished();
       }
-    }   
+    }
+
+    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
   }
 
   void addTimer(int value) {
@@ -174,6 +197,8 @@ class TimerPlayer {
         state.addedNewAfterFinish = true;
       }
     }
+
+    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
   }
 
   Future<void> playStopTimer() async {
@@ -202,15 +227,19 @@ class TimerPlayer {
     } else {
       dropTimer();
     }
+
+    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
   }
 
   void resetTimer() {
-    state.timersValues = List.from(_timersSizes);
+    state.timersValues = List.from(state.timersSizes);
     state.playing = false;
     state.finished = false;
     state.addedNewAfterFinish = false;
     state.currentTimer = -1;
     dropTimer();
+
+    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
   }
 
   void clearTimer() {
@@ -221,6 +250,8 @@ class TimerPlayer {
     state.addedNewAfterFinish = false;
     state.currentTimer = -1;
     dropTimer();
+
+    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
   }
 }
 
@@ -250,11 +281,18 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
+  TimerState _currentState = TimerState();
 
   @override
   void initState()
   {
     super.initState();
+    FlutterBackgroundService().on(BackgroundEvents.stateUpdated).listen((data) {
+      setState(() {
+        int i = 0;
+        // currentState = ;...
+      });
+    });
   }
 
   @override
@@ -263,69 +301,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _addTimer() {
-    setState(() {
-      if (_controller.text.isNotEmpty) {
-        var value = int.tryParse(_controller.text);
-        if (value != null && value > 0) {
-          FlutterBackgroundService().invoke(BackgroundEvents.addTimer, { "value": value })
-        }
+    if (_controller.text.isNotEmpty) {
+      var value = int.tryParse(_controller.text);
+      if (value != null && value > 0) {
+        FlutterBackgroundService().invoke(BackgroundEvents.addTimer, { "value": value });
       }
-    });
+    }
   }
 
   void _playStopTimer() {
-    setState(() {
-      if (_finished)
-      {
-        if (_addedNewAfterFinish)
-        {
-          _addedNewAfterFinish = false;
-          _finished = false;
-          _currentTimer++;
-        } else {
-          _resetTimer();
-        }
-      }
-
-      if (_timersSizes.isEmpty) {
-        return;
-      }
-
-      _playing = !_playing;
-
-      if (_playing) {
-        if (_currentTimer < 0) {
-          _currentTimer = 0;
-        }
-        
-        _startTimer();
-      } else {
-        _dropTimer();
-      }
-    });
+    FlutterBackgroundService().invoke(BackgroundEvents.playStopTimer);
   }
 
   void _resetTimer() {
-    setState(() {
-      _timersValues = List.from(_timersSizes);
-      _playing = false;
-      _finished = false;
-      _addedNewAfterFinish = false;
-      _currentTimer = -1;
-      _dropTimer();
-    });
+    FlutterBackgroundService().invoke(BackgroundEvents.resetTimer);
   }
 
   void _clearTimer() {
-    setState(() {
-      _timersSizes.clear();
-      _timersValues.clear();
-      _playing = false;
-      _finished = false;
-      _addedNewAfterFinish = false;
-      _currentTimer = -1;
-      _dropTimer();
-    });
+    FlutterBackgroundService().invoke(BackgroundEvents.clearTimer);
   }
 
   @override
@@ -345,12 +338,12 @@ class _MyHomePageState extends State<MyHomePage> {
       fontSize: 30,
     );
 
-    for (int i = 0; i < _timersValues.length; i++)
+    for (int i = 0; i < _currentState.timersValues.length; i++)
     {
-      bool used = _currentTimer >= 0 && i <= _currentTimer;
+      bool used = _currentState.currentTimer >= 0 && i <= _currentState.currentTimer;
       timersViews.add(
         Text(
-          _timersValues[i].toString(),
+          _currentState.timersValues[i].toString(),
           style: used ? usedTextStyle : freshTextStyle,
         )
       );
@@ -402,7 +395,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 FloatingActionButton(
                   onPressed: _playStopTimer,
                   tooltip: 'playStopTimer',
-                  child: Icon(_playing ? Icons.pause : Icons.play_arrow),
+                  child: Icon(_currentState.playing ? Icons.pause : Icons.play_arrow),
                 ),
                 const SizedBox(
                   width: 25,
