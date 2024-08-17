@@ -8,6 +8,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 // import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +18,16 @@ void main() {
 
 Future<void> initializeService() async {
   final service = FlutterBackgroundService();
+
+  const notificationChannelId = "my_foreground";
+
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    notificationChannelId, // id
+    'MY FOREGROUND SERVICE', // title
+    description:
+        'This channel is used for important notifications.', // description
+    importance: Importance.low, // importance must be at low or higher level
+  );
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
