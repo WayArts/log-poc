@@ -34,7 +34,7 @@ Future<void> initializeService() async {
       onStart: onStart,
       isForegroundMode: true,
       autoStart: true,
-      notificationChannelId: 'my_foreground',
+      notificationChannelId: notificationChannelId,
       initialNotificationTitle: 'Background Service',
       initialNotificationContent: 'Running background tasks',
       foregroundServiceNotificationId: 888,
