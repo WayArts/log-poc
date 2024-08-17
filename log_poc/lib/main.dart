@@ -1,5 +1,5 @@
 import 'dart:async';
-// import 'dart:io';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -9,8 +9,8 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 // import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
-// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-//import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:device_info_plus/device_info_plus.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,31 +23,31 @@ Future<void> initializeService() async {
 
   const notificationChannelId = "my_foreground";
 
-  // /// OPTIONAL, using custom notification channel id
-  // const AndroidNotificationChannel channel = AndroidNotificationChannel(
-  //   notificationChannelId, // id
-  //   'MY FOREGROUND SERVICE', // title
-  //   description:
-  //       'This channel is used for important notifications.', // description
-  //   importance: Importance.low, // importance must be at low or higher level
-  // );
+  /// OPTIONAL, using custom notification channel id
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    notificationChannelId, // id
+    'MY FOREGROUND SERVICE', // title
+    description:
+        'This channel is used for important notifications.', // description
+    importance: Importance.low, // importance must be at low or higher level
+  );
 
-  // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  //     FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
-  // if (Platform.isIOS || Platform.isAndroid) {
-  //   await flutterLocalNotificationsPlugin.initialize(
-  //     const InitializationSettings(
-  //       iOS: DarwinInitializationSettings(),
-  //       android: AndroidInitializationSettings('ic_bg_service_small'),
-  //     ),
-  //   );
-  // }
+  if (Platform.isIOS || Platform.isAndroid) {
+    await flutterLocalNotificationsPlugin.initialize(
+      const InitializationSettings(
+        iOS: DarwinInitializationSettings(),
+        android: AndroidInitializationSettings('ic_bg_service_small'),
+      ),
+    );
+  }
 
-  // await flutterLocalNotificationsPlugin
-  //     .resolvePlatformSpecificImplementation<
-  //         AndroidFlutterLocalNotificationsPlugin>()
-  //     ?.createNotificationChannel(channel);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
@@ -89,6 +89,9 @@ void onStart(ServiceInstance service) async {
   // Only available for flutter 3.0.0 and later
   DartPluginRegistrant.ensureInitialized();
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
   final player = TimerPlayer();
 
   await player.initState(service);
@@ -129,11 +132,11 @@ class TimerState {
 
   TimerState.fromJson(Map<String, dynamic> data)
   {
-    timersSizes = data['timersSizes'];
-    timersValues = data['timersValues'];
+    timersSizes = List.from(data['timersSizes']);
+    timersValues = List.from(data['timersValues']);
     currentTimer = data['currentTimer'];
     playing = data['playing'];
-    finished =data['finished'];
+    finished = data['finished'];
     addedNewAfterFinish = data['addedNewAfterFinish'];
   }
 
@@ -355,6 +358,7 @@ class _MyHomePageState extends State<MyHomePage> {
       var value = int.tryParse(_controller.text);
       if (value != null && value > 0) {
         FlutterBackgroundService().invoke(BackgroundEvents.addTimer, { "value": value });
+        _controller.clear();
       }
     }
   }
