@@ -62,7 +62,7 @@ Future<void> initializeService() async {
       initialNotificationTitle: 'AWESOME SERVICE',
       initialNotificationContent: 'Initializing',
       foregroundServiceNotificationId: 888,
-      foregroundServiceType: AndroidForegroundType.location,
+      foregroundServiceType: AndroidForegroundType.mediaPlayback,
     ),
     iosConfiguration: IosConfiguration(
       // auto start service
