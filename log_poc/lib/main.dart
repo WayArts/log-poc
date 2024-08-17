@@ -89,8 +89,8 @@ void onStart(ServiceInstance service) async {
   // Only available for flutter 3.0.0 and later
   DartPluginRegistrant.ensureInitialized();
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  //     FlutterLocalNotificationsPlugin();
 
   final player = TimerPlayer();
 
@@ -223,8 +223,10 @@ class TimerPlayer {
   }
 
   Future<void> updateTimer() async {
-    service?.invoke(BackgroundEvents.stateUpdated, { "state": state } );
-    state.timersValues[state.currentTimer]--;
+    if (state.timersValues[state.currentTimer] > 0)
+    {
+      state.timersValues[state.currentTimer]--;
+    }
 
     if (state.timersValues[state.currentTimer] == 0)
     {      
