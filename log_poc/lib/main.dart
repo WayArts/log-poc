@@ -1,4 +1,5 @@
 import 'dart:async';
+// import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -8,11 +9,12 @@ import 'package:just_audio/just_audio.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 // import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+//import 'package:device_info_plus/device_info_plus.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  initializeService();
+  await initializeService();
   runApp(const MyApp());
 }
 
@@ -21,33 +23,58 @@ Future<void> initializeService() async {
 
   const notificationChannelId = "my_foreground";
 
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    notificationChannelId, // id
-    'MY FOREGROUND SERVICE', // title
-    description:
-        'This channel is used for important notifications.', // description
-    importance: Importance.low, // importance must be at low or higher level
-  );
+  // /// OPTIONAL, using custom notification channel id
+  // const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  //   notificationChannelId, // id
+  //   'MY FOREGROUND SERVICE', // title
+  //   description:
+  //       'This channel is used for important notifications.', // description
+  //   importance: Importance.low, // importance must be at low or higher level
+  // );
+
+  // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  //     FlutterLocalNotificationsPlugin();
+
+  // if (Platform.isIOS || Platform.isAndroid) {
+  //   await flutterLocalNotificationsPlugin.initialize(
+  //     const InitializationSettings(
+  //       iOS: DarwinInitializationSettings(),
+  //       android: AndroidInitializationSettings('ic_bg_service_small'),
+  //     ),
+  //   );
+  // }
+
+  // await flutterLocalNotificationsPlugin
+  //     .resolvePlatformSpecificImplementation<
+  //         AndroidFlutterLocalNotificationsPlugin>()
+  //     ?.createNotificationChannel(channel);
 
   await service.configure(
     androidConfiguration: AndroidConfiguration(
+      // this will be executed when app is in foreground or background in separated isolate
       onStart: onStart,
-      isForegroundMode: true,
+
+      // auto start service
       autoStart: true,
+      isForegroundMode: true,
+
       notificationChannelId: notificationChannelId,
-      initialNotificationTitle: 'Background Service',
-      initialNotificationContent: 'Running background tasks',
+      initialNotificationTitle: 'AWESOME SERVICE',
+      initialNotificationContent: 'Initializing',
       foregroundServiceNotificationId: 888,
-      foregroundServiceType: AndroidForegroundType.mediaPlayback,
+      foregroundServiceType: AndroidForegroundType.location,
     ),
     iosConfiguration: IosConfiguration(
+      // auto start service
       autoStart: true,
+
+      // this will be executed when app is in foreground in separated isolate
       onForeground: onStart,
+
+      // you have to enable background fetch capability on xcode project
       onBackground: onIosBackground,
     ),
   );
-
-  service.startService();
 }
 
 @pragma('vm:entry-point')
@@ -66,7 +93,10 @@ void onStart(ServiceInstance service) async {
 
   await player.initState(service);
 
-  // TODO: player.dispose on app closing
+  service.on(BackgroundEvents.closeApp).listen((event) async {
+    await player.dispose();
+    service.stopSelf();
+  });
 }
 
 class BackgroundEvents {
@@ -75,6 +105,7 @@ class BackgroundEvents {
   static const playStopTimer = "playStopTimer";
   static const resetTimer = "resetTimer";
   static const clearTimer = "clearTimer";
+  static const closeApp = "closeApp";
 }
 
 class TimerState {
@@ -96,19 +127,25 @@ class TimerState {
     this.addedNewAfterFinish
   );
 
+  TimerState.fromJson(Map<String, dynamic> data)
+  {
+    timersSizes = data['timersSizes'];
+    timersValues = data['timersValues'];
+    currentTimer = data['currentTimer'];
+    playing = data['playing'];
+    finished =data['finished'];
+    addedNewAfterFinish = data['addedNewAfterFinish'];
+  }
+
   Map<String, dynamic> toJson() {
     return {
-      'TimerState': this
+      'timersSizes': timersSizes,
+      'timersValues': timersValues,
+      'currentTimer': currentTimer,
+      'playing': playing,
+      'finished': finished,
+      'addedNewAfterFinish': addedNewAfterFinish,
     };
-    // return {
-    //   'timersSizes': timersSizes,
-    // };
-    // timersSizes,
-    // this.timersValues,
-    // this.currentTimer,
-    // this.playing,
-    // this.finished,
-    // this.addedNewAfterFinish
   }
 }
 
@@ -299,9 +336,11 @@ class _MyHomePageState extends State<MyHomePage> {
   {
     super.initState();
     FlutterBackgroundService().on(BackgroundEvents.stateUpdated).listen((data) {
+      if (data == null) {
+        return;
+      }
       setState(() {
-        int i = 0;
-        // currentState = ;...
+        _currentState = TimerState.fromJson(data);
       });
     });
   }
