@@ -11,6 +11,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:device_info_plus/device_info_plus.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -93,13 +94,25 @@ void onStart(ServiceInstance service) async {
   //     FlutterLocalNotificationsPlugin();
 
   final player = TimerPlayer();
+  // var preferences = await SharedPreferences.getInstance();
+
+  // Timer.periodic(const Duration(milliseconds: 200), (timer) async {
+  //   preferences.reload();
+  //   bool? closeApp = preferences.getBool(BackgroundEvents.closeApp);
+  //   if (closeApp != null && closeApp)
+  //   {
+  //     await player.dispose();
+  //     timer.cancel();
+  //     service.stopSelf();
+  //   }
+  // });
 
   await player.initState(service);
 
-  service.on(BackgroundEvents.closeApp).listen((event) async {
-    await player.dispose();
-    service.stopSelf();
-  });
+  // service.on(BackgroundEvents.closeApp).listen((event) async {
+  //   await player.dispose();
+  //   service.stopSelf();
+  // });
 }
 
 class BackgroundEvents {
@@ -214,7 +227,7 @@ class TimerPlayer {
 
   Future<void> timerFinished() async {
     playStopTimer();
-    
+
     await timersFinisedPlayer.stop();
     await timersFinisedPlayer.seek(Duration.zero);
     await timersFinisedPlayer.play();
@@ -332,14 +345,21 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
   TimerState _currentState = TimerState();
+  // SharedPreferences? preferences;
 
   @override
-  void initState()
-  {
+  void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // () async {
+    //   preferences = await SharedPreferences.getInstance();
+    //   preferences?.setBool(BackgroundEvents.closeApp, false);
+    // } ();
+
     FlutterBackgroundService().on(BackgroundEvents.stateUpdated).listen((data) {
       if (data == null) {
         return;
@@ -352,7 +372,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.detached) {
+      // preferences?.setBool(BackgroundEvents.closeApp, true);
+      // FlutterBackgroundService().invoke(BackgroundEvents.closeApp);
+      // FlutterBackgroundService().invoke("stopService");
+      
+      // I didnt find better way to stop background service
+      // I can use polling with Timer, and wher polling stoped - then stop service
+      // but this is not better than exit(0)
+      exit(0);
+    }
   }
 
   void _addTimer() {
