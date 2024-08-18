@@ -1,4 +1,4 @@
-package com.wayarts.log_poc
+package com.wayarts.logpoc
 
 import io.flutter.embedding.android.FlutterActivity
 

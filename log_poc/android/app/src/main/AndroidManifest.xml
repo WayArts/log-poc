@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="com.wayarts.log_poc">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="com.wayarts.logpoc">
 <!-- <manifest xmlns:android="http://schemas.android.com/apk/res/android"> -->
     
     <!-- <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/> -->
