@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import flutter_background_service_ios
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {

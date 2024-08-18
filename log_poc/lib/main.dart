@@ -76,6 +76,8 @@ Future<void> initializeService() async {
       onBackground: onIosBackground,
     ),
   );
+
+  await service.startService();
 }
 
 @pragma('vm:entry-point')
