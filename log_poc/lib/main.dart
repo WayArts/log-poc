@@ -228,13 +228,9 @@ class TimerPlayer {
   }
 
   Future<void> timerFinished() async {
-    playStopTimer();
-
     await timersFinisedPlayer.stop();
     await timersFinisedPlayer.seek(Duration.zero);
     await timersFinisedPlayer.play();
-    
-    state.finished = true;
   }
 
   Future<void> updateTimer() async {
@@ -247,10 +243,12 @@ class TimerPlayer {
     {      
       if (state.currentTimer + 1 < state.timersSizes.length)
       {
-        await timerEndNotify();
         state.currentTimer++;
+        timerEndNotify();
       } else {
-        await timerFinished();
+        playStopTimer();
+        state.finished = true;
+        timerFinished();
       }
     }
 
