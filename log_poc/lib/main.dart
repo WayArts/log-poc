@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 // import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
@@ -95,6 +96,12 @@ void onStart(ServiceInstance service) async {
   // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   //     FlutterLocalNotificationsPlugin();
 
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
+
   final player = TimerPlayer();
   // var preferences = await SharedPreferences.getInstance();
 
@@ -169,8 +176,7 @@ class TimerState {
 
 class TimerPlayer {
   Timer? timer;
-  final timerEndedPlayer = AudioPlayer();
-  final timersFinisedPlayer = AudioPlayer();
+  final player = AudioPlayer();
   ServiceInstance? service;
   TimerState state = TimerState();
 
@@ -198,16 +204,12 @@ class TimerPlayer {
     service.on(BackgroundEvents.resetTimer).listen((data) {
       resetTimer();
     });
-    
-    await timerEndedPlayer.setAsset('assets/TimerEnded.mp3');
-    await timerEndedPlayer.setVolume(0.7);
-    await timersFinisedPlayer.setAsset('assets/TimersFinised.mp3');
   }
 
   Future<void> dispose() async {
     await dropTimer();
-    await timerEndedPlayer.dispose();
-    await timersFinisedPlayer.dispose();
+    await player.dispose();
+    await player.dispose();
   }
 
   Future<void> dropTimer() async {
@@ -222,15 +224,25 @@ class TimerPlayer {
   }
 
   Future<void> timerEndNotify() async {
-    await timerEndedPlayer.stop();
-    await timerEndedPlayer.seek(Duration.zero);
-    await timerEndedPlayer.play();
+    await player.stop();
+    await player.setAsset(
+      'assets/TimerEnded.mp3',
+      tag: const MediaItem(id: "1", title: "timer ended")
+    );
+    await player.setVolume(0.7);
+    await player.seek(Duration.zero);
+    await player.play();
   }
 
   Future<void> timerFinished() async {
-    await timersFinisedPlayer.stop();
-    await timersFinisedPlayer.seek(Duration.zero);
-    await timersFinisedPlayer.play();
+    await player.stop();
+    await player.setAsset(
+      'assets/TimersFinised.mp3',
+      tag: const MediaItem(id: "2", title: "timer finished")
+    );
+    await player.setVolume(1);
+    await player.seek(Duration.zero);
+    await player.play();
   }
 
   Future<void> updateTimer() async {
