@@ -212,14 +212,10 @@ class TimerPlayer {
     await timerEndedPlayer.play();
   }
 
-  Future<void> timerFinished() async {
-    playStopTimer();
-    
+  Future<void> timerFinished() async {    
     await timersFinisedPlayer.stop();
     await timersFinisedPlayer.seek(Duration.zero);
     await timersFinisedPlayer.play();
-    
-    state.finished = true;
   }
 
   Future<void> updateTimer() async {
@@ -232,10 +228,12 @@ class TimerPlayer {
     {      
       if (state.currentTimer + 1 < state.timersSizes.length)
       {
-        await timerEndNotify();
+        timerEndNotify();
         state.currentTimer++;
       } else {
-        await timerFinished();
+        playStopTimer();
+        state.finished = true;
+        timerFinished();
       }
     }
 
@@ -332,14 +330,15 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
   TimerState _currentState = TimerState();
 
   @override
-  void initState()
-  {
+  void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
     FlutterBackgroundService().on(BackgroundEvents.stateUpdated).listen((data) {
       if (data == null) {
         return;
@@ -352,7 +351,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.detached) {
+      exit(0);
+    }
   }
 
   void _addTimer() {
