@@ -1,336 +1,24 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:ui';
+// import 'dart:io';
+// import 'dart:ui';
 
-import 'package:flutter/material.dart';
 // import 'package:logger/logger.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
-// import 'package:flutter_background_service_android/flutter_background_service_android.dart';
-// import 'package:flutter_background_service_ios/flutter_background_service_ios.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// import 'package:device_info_plus/device_info_plus.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:log_poc/view_timer_state.dart';
+import 'package:log_poc/timer_controller.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeService();
+  await NotificationService.init();
+  tz.initializeTimeZones();
+
+  Timer.periodic(const Duration( seconds: 10), (timer) {
+    NotificationService.scheduleTimerEnded(10, DateTime.now().add(const Duration(seconds: 10)));
+  });
+
   runApp(const MyApp());
-}
-
-Future<void> initializeService() async {
-  final service = FlutterBackgroundService();
-
-  const notificationChannelId = "my_foreground";
-
-  /// OPTIONAL, using custom notification channel id
-  const AndroidNotificationChannel channel = AndroidNotificationChannel(
-    notificationChannelId, // id
-    'MY FOREGROUND SERVICE', // title
-    description:
-        'This channel is used for important notifications.', // description
-    importance: Importance.low, // importance must be at low or higher level
-  );
-
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-
-  if (Platform.isIOS || Platform.isAndroid) {
-    await flutterLocalNotificationsPlugin.initialize(
-      const InitializationSettings(
-        iOS: DarwinInitializationSettings(),
-        android: AndroidInitializationSettings('ic_bg_service_small'),
-      ),
-    );
-  }
-
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
-
-  await service.configure(
-    androidConfiguration: AndroidConfiguration(
-      // this will be executed when app is in foreground or background in separated isolate
-      onStart: onStart,
-
-      // auto start service
-      autoStart: true,
-      isForegroundMode: true,
-
-      notificationChannelId: notificationChannelId,
-      initialNotificationTitle: 'AWESOME SERVICE',
-      initialNotificationContent: 'Initializing',
-      foregroundServiceNotificationId: 888,
-      foregroundServiceType: AndroidForegroundType.mediaPlayback,
-    ),
-    iosConfiguration: IosConfiguration(
-      // auto start service
-      autoStart: true,
-
-      // this will be executed when app is in foreground in separated isolate
-      onForeground: onStart,
-
-      // you have to enable background fetch capability on xcode project
-      onBackground: onIosBackground,
-    ),
-  );
-
-  await service.startService();
-}
-
-@pragma('vm:entry-point')
-Future<bool> onIosBackground(ServiceInstance service) async {
-  WidgetsFlutterBinding.ensureInitialized();
-  DartPluginRegistrant.ensureInitialized();
-  return true;
-}
-
-@pragma('vm:entry-point')
-void onStart(ServiceInstance service) async {
-  // Only available for flutter 3.0.0 and later
-  DartPluginRegistrant.ensureInitialized();
-
-  // final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  //     FlutterLocalNotificationsPlugin();
-
-  await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
-    androidNotificationChannelName: 'Audio playback',
-    androidNotificationOngoing: true,
-  );
-
-  final player = TimerPlayer();
-  // var preferences = await SharedPreferences.getInstance();
-
-  // Timer.periodic(const Duration(milliseconds: 200), (timer) async {
-  //   preferences.reload();
-  //   bool? closeApp = preferences.getBool(BackgroundEvents.closeApp);
-  //   if (closeApp != null && closeApp)
-  //   {
-  //     await player.dispose();
-  //     timer.cancel();
-  //     service.stopSelf();
-  //   }
-  // });
-
-  await player.initState(service);
-
-  // service.on(BackgroundEvents.closeApp).listen((event) async {
-  //   await player.dispose();
-  //   service.stopSelf();
-  // });
-}
-
-class BackgroundEvents {
-  static const stateUpdated = "stateUpdated";
-  static const addTimer = "addTimer";
-  static const playStopTimer = "playStopTimer";
-  static const resetTimer = "resetTimer";
-  static const clearTimer = "clearTimer";
-  static const closeApp = "closeApp";
-}
-
-class TimerState {
-  List<int> timersSizes = [];
-  List<int> timersValues = [];
-  int currentTimer = -1;
-  bool playing = false;
-  bool finished = false;
-  bool addedNewAfterFinish = false;
-
-  TimerState();
-
-  TimerState.init(
-    this.timersSizes,
-    this.timersValues,
-    this.currentTimer,
-    this.playing,
-    this.finished,
-    this.addedNewAfterFinish
-  );
-
-  TimerState.fromJson(Map<String, dynamic> data)
-  {
-    timersSizes = List.from(data['timersSizes']);
-    timersValues = List.from(data['timersValues']);
-    currentTimer = data['currentTimer'];
-    playing = data['playing'];
-    finished = data['finished'];
-    addedNewAfterFinish = data['addedNewAfterFinish'];
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'timersSizes': timersSizes,
-      'timersValues': timersValues,
-      'currentTimer': currentTimer,
-      'playing': playing,
-      'finished': finished,
-      'addedNewAfterFinish': addedNewAfterFinish,
-    };
-  }
-}
-
-class TimerPlayer {
-  Timer? timer;
-  final player = AudioPlayer();
-  ServiceInstance? service;
-  TimerState state = TimerState();
-
-  Future<void> initState(ServiceInstance service) async {
-    this.service = service;
-    state = TimerState();
-
-    service.on(BackgroundEvents.addTimer).listen((data) {
-      if (data == null)
-      {
-        return;
-      }
-      
-      addTimer(data["value"]);
-    });
-
-    service.on(BackgroundEvents.clearTimer).listen((data) {
-      clearTimer();
-    });
-
-    service.on(BackgroundEvents.playStopTimer).listen((data) {
-      playStopTimer();
-    });
-
-    service.on(BackgroundEvents.resetTimer).listen((data) {
-      resetTimer();
-    });
-  }
-
-  Future<void> dispose() async {
-    await dropTimer();
-    await player.dispose();
-    await player.dispose();
-  }
-
-  Future<void> dropTimer() async {
-    timer?.cancel();
-    timer = null;
-  }
-
-  void startTimer() {
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      updateTimer();
-    });
-  }
-
-  Future<void> timerEndNotify() async {
-    await player.stop();
-    await player.setAsset(
-      'assets/TimerEnded.mp3',
-      tag: const MediaItem(id: "1", title: "timer ended")
-    );
-    await player.setVolume(0.7);
-    await player.seek(Duration.zero);
-    await player.play();
-  }
-
-  Future<void> timerFinished() async {
-    await player.stop();
-    await player.setAsset(
-      'assets/TimersFinised.mp3',
-      tag: const MediaItem(id: "2", title: "timer finished")
-    );
-    await player.setVolume(1);
-    await player.seek(Duration.zero);
-    await player.play();
-  }
-
-  Future<void> updateTimer() async {
-    if (state.timersValues[state.currentTimer] > 0)
-    {
-      state.timersValues[state.currentTimer]--;
-    }
-
-    if (state.timersValues[state.currentTimer] == 0)
-    {      
-      if (state.currentTimer + 1 < state.timersSizes.length)
-      {
-        state.currentTimer++;
-        timerEndNotify();
-      } else {
-        playStopTimer();
-        state.finished = true;
-        timerFinished();
-      }
-    }
-
-    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
-  }
-
-  void addTimer(int value) {
-    if (value > 0) {
-      state.timersSizes.add(value);
-      state.timersValues.add(value);
-      if (state.finished) {
-        state.addedNewAfterFinish = true;
-      }
-    }
-
-    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
-  }
-
-  Future<void> playStopTimer() async {
-    if (state.finished) {
-      if (state.addedNewAfterFinish) {
-        state.addedNewAfterFinish = false;
-        state.finished = false;
-        state.currentTimer++;
-      } else {
-        resetTimer();
-      }
-    }
-
-    if (state.timersSizes.isEmpty) {
-      return;
-    }
-
-    state.playing = !state.playing;
-
-    if (state.playing) {
-      if (state.currentTimer < 0) {
-        state.currentTimer = 0;
-      }
-        
-      startTimer();
-    } else {
-      dropTimer();
-    }
-
-    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
-  }
-
-  void resetTimer() {
-    state.timersValues = List.from(state.timersSizes);
-    state.playing = false;
-    state.finished = false;
-    state.addedNewAfterFinish = false;
-    state.currentTimer = -1;
-    dropTimer();
-
-    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
-  }
-
-  void clearTimer() {
-    state.timersSizes.clear();
-    state.timersValues.clear();
-    state.playing = false;
-    state.finished = false;
-    state.addedNewAfterFinish = false;
-    state.currentTimer = -1;
-    dropTimer();
-
-    service?.invoke(BackgroundEvents.stateUpdated, state.toJson());
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -359,31 +47,25 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
-  TimerState _currentState = TimerState();
-  // SharedPreferences? preferences;
+  late TimerController _timerController;
+  ViewTimerState _currentState = ViewTimerState();
+  late Timer _updater;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // () async {
-    //   preferences = await SharedPreferences.getInstance();
-    //   preferences?.setBool(BackgroundEvents.closeApp, false);
-    // } ();
-
-    FlutterBackgroundService().on(BackgroundEvents.stateUpdated).listen((data) {
-      if (data == null) {
-        return;
-      }
+    _updater = Timer.periodic(const Duration (milliseconds: 100), (timer) {
       setState(() {
-        _currentState = TimerState.fromJson(data);
+        _currentState = _timerController.getViewState();
       });
     });
   }
 
   @override
   void dispose() {
+    _updater.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -393,14 +75,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.detached) {
-      // preferences?.setBool(BackgroundEvents.closeApp, true);
-      // FlutterBackgroundService().invoke(BackgroundEvents.closeApp);
-      // FlutterBackgroundService().invoke("stopService");
-      
-      // I didnt find better way to stop background service
-      // I can use polling with Timer, and wher polling stoped - then stop service
-      // but this is not better than exit(0)
-      exit(0);
+      // exit(0);
     }
   }
 
