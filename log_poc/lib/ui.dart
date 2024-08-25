@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,7 +32,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final TextEditingController _controller = TextEditingController();
-  late TimerController _timerController;
   ViewTimerState _currentState = ViewTimerState();
   late Timer _updater;
 
@@ -41,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 
     _updater = Timer.periodic(const Duration (milliseconds: 100), (timer) {
       setState(() {
-        _currentState = _timerController.getViewState();
+        _currentState = TimerController.getViewTimerState();
       });
     });
   }
@@ -66,22 +67,22 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     if (_controller.text.isNotEmpty) {
       var value = int.tryParse(_controller.text);
       if (value != null && value > 0) {
-        FlutterBackgroundService().invoke(BackgroundEvents.addTimer, { "value": value });
         _controller.clear();
+        TimerController.addTimer(value);
       }
     }
   }
 
   void _playStopTimer() {
-    FlutterBackgroundService().invoke(BackgroundEvents.playStopTimer);
+    TimerController.playStopTimer();
   }
 
   void _resetTimer() {
-    FlutterBackgroundService().invoke(BackgroundEvents.resetTimer);
+    TimerController.resetTimer();
   }
 
   void _clearTimer() {
-    FlutterBackgroundService().invoke(BackgroundEvents.clearTimer);
+    TimerController.clearTimer();
   }
 
   @override

@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'package:log_poc/ui.dart';
-// import 'package:log_poc/notifications.dart';
+import 'package:log_poc/notifications.dart';
 import 'package:log_poc/timer_controller.dart';
 
 Future<void> main() async {

@@ -1,5 +1,7 @@
 class ViewTimerState {
   List<int> timersValues = [];
+  
+  // -1 means didnt start
   int currentTimer = -1;
   bool playing = false;
 
