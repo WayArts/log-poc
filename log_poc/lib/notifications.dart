@@ -87,38 +87,54 @@ class NotificationService {
   }
 
   static Future<void> scheduleNotification(int id, String title, String body, tz.TZDateTime scheduledTime, { NotificationSounds? sound }) async {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      // tz.TZDateTime.now(tz.local).add(const Duration(seconds: 3)),
-      scheduledTime,
-      // tz.TZDateTime.from(DateTime.now().add(const Duration(seconds: 10)), tz.local),
-      NotificationDetails(
-        iOS: DarwinNotificationDetails(sound: _getFileNameFromEnumIOS(sound)),
-        android:
-        AndroidNotificationDetails(
-          'logpoc_channel',
-          'Log poc Channel',
-          channelDescription: 'Log poc Channel',
-          importance: Importance.max,
-          priority: Priority.max,
-          sound: RawResourceAndroidNotificationSound(_getFileNameFromEnumAndroid(sound)),
+    try {
+      var androidSound = _getFileNameFromEnumAndroid(sound);
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        // tz.TZDateTime.now(tz.local).add(const Duration(seconds: 3)),
+        scheduledTime,
+        // tz.TZDateTime.from(DateTime.now().add(const Duration(seconds: 10)), tz.local),
+        NotificationDetails(
+          iOS: DarwinNotificationDetails(sound: _getFileNameFromEnumIOS(sound)),
+          android:
+          AndroidNotificationDetails(
+            'logpoc_channel_${androidSound ?? ""}',
+            'Log poc Channel',
+            channelDescription: 'Log poc Channel',
+            importance: Importance.max,
+            priority: Priority.max,
+            sound: RawResourceAndroidNotificationSound(androidSound),
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dateAndTime,
+      );
+    } catch (e) {
+      print(e.toString());
+    }
+    
   }
 
   static Future<void> cancelAllScheduledMessages() async {
-    await flutterLocalNotificationsPlugin.cancelAll();
+    try {
+      await flutterLocalNotificationsPlugin.cancelAll();
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
-  static Future<void> cancelScheduledMessages(List<int> notificationIds) async {
-    for (var id in notificationIds) {
-      await flutterLocalNotificationsPlugin.cancel(id);
+  static Future cancelScheduledNotifications(List<int> notificationIds) async {
+    try {
+      List<Future> futures = [];
+      for (var id in notificationIds) {
+        futures.add(flutterLocalNotificationsPlugin.cancel(id));
+      }
+      return Future.wait(futures);
+    } catch (e) {
+      print(e.toString());
     }
   }
 }

@@ -58,6 +58,12 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
 
+    if (state == AppLifecycleState.resumed) {
+      TimerController.background(false);
+    } else {
+      TimerController.background(true);
+    }
+
     if (state == AppLifecycleState.detached) {
       // exit(0);
     }

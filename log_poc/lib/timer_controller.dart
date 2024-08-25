@@ -1,9 +1,12 @@
 // import 'package:json_serializable/json_serializable.dart';
+import 'dart:async';
+
 import 'package:localstore/localstore.dart';
 
 import 'package:log_poc/notifications.dart';
 import 'package:log_poc/view_timer_state.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:audioplayers/audioplayers.dart';
  
 class TimerState {
   /// Iso8601, "" means not playing
@@ -84,19 +87,27 @@ class TimerController {
 
   static const String docId = "1";
   static Future<void> _loadStateFromStorage() async {
-    var data = await Localstore.instance.collection(_collectionName).doc(docId).get();
-    bool storageEmpty = data == null ? true : data.isEmpty;
-    if (!storageEmpty) {
-      _timerState = TimerState.fromJson(data);
-    } else {
-      _timerState = TimerState();
-      await Localstore.instance.collection(_collectionName).doc(docId).set(_timerState.toJson());
+    try {
+      var data = await Localstore.instance.collection(_collectionName).doc(docId).get();
+      bool storageEmpty = data == null ? true : data.isEmpty;
+      if (!storageEmpty) {
+        _timerState = TimerState.fromJson(data);
+      } else {
+        _timerState = TimerState();
+        await Localstore.instance.collection(_collectionName).doc(docId).set(_timerState.toJson());
+      }
+    } catch (e) {
+      print(e.toString());
     }
   }
 
   static Future<void> _putStaleToStorage() async {
-    await Localstore.instance.collection(_collectionName).delete();
-    await Localstore.instance.collection(_collectionName).doc().set(_timerState.toJson());
+    try {
+      await Localstore.instance.collection(_collectionName).delete();
+      await Localstore.instance.collection(_collectionName).doc().set(_timerState.toJson());
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   /// returns temporary but easy to understand state of timer
@@ -108,9 +119,11 @@ class TimerController {
     bool timerStarted = _timerState.startMoment != "";
     int passedTimeMs = _timerState.passedBeforeStart;
 
+    var now = DateTime.now();
+    state.now = now;
+
     if (timerStarted) {
       var startMoment = DateTime.parse(_timerState.startMoment);
-      var now = DateTime.now();
 
       state.startMoment = startMoment;
       state.now = now;
@@ -160,8 +173,8 @@ class TimerController {
     return state;
   }
 
-  static Future<void> _removeAllMessages({bool putStaleToStorage = true}) async {
-    await NotificationService.cancelScheduledMessages(_timerState.notificationIds);
+  static Future<void> _removeNotifications({bool putStaleToStorage = true}) async {
+    await NotificationService.cancelScheduledNotifications(_timerState.notificationIds);
 
     _timerState.notificationIds.clear();
 
@@ -183,14 +196,14 @@ class TimerController {
 
     _timerState.startMoment = "";
 
-    await _removeAllMessages(putStaleToStorage: false);
+    await _removeNotifications(putStaleToStorage: false);
 
     if (putStaleToStorage) {
       await _putStaleToStorage();
     }
   }
 
-  static Future<void> _playTimer({bool putStaleToStorage = true}) async {
+  static Future _playTimer({bool putStaleToStorage = true}) async {
     var easyState = _getEasyTimerState();
     
     if (easyState.playing || easyState.totalTimerSize <= 0) {
@@ -202,7 +215,26 @@ class TimerController {
     }
 
     _timerState.startMoment = DateTime.now().toIso8601String();
-    easyState = _getEasyTimerState();
+
+    List<Future> futures = [];
+
+    if (_inBackground) {
+      futures.add(
+        _createNotifications(putStaleToStorage: false)
+      );
+    }
+
+    if (putStaleToStorage) {
+      futures.add(
+        _putStaleToStorage()
+      );
+    }
+
+    return Future.wait(futures);
+  }
+
+  static Future _createNotifications({bool putStaleToStorage = true}) async {
+    var easyState = _getEasyTimerState();
 
     int millisecondsShift = -easyState.passedTime;
     List<Pair<int, tz.TZDateTime>> timerFinishedMoments = [];
@@ -221,30 +253,42 @@ class TimerController {
       );
     }
 
+    List<Future> futures = [];
+
     for (var i = 0; i < timerFinishedMoments.length - 1; i++) {
-      NotificationService.scheduleNotification(
-        ++_timerState.lastId,
-        "${_timerState.timersSizes[timerFinishedMoments[i].first]} seconds timer",
-        "Timer ended",
-        timerFinishedMoments[i].second,
-        sound: NotificationSounds.timerEnded
+      futures.add(
+        NotificationService.scheduleNotification(
+          _timerState.lastId + 1,
+          "${_timerState.timersSizes[timerFinishedMoments[i].first]} seconds timer",
+          "Timer ended",
+          timerFinishedMoments[i].second,
+          sound: NotificationSounds.timerEnded
+        )
       );
+
+      _timerState.notificationIds.add(++_timerState.lastId);
     }
 
     if (timerFinishedMoments.isNotEmpty) {
       var totalDuration = Duration(milliseconds: easyState.totalTimerSize);
-      NotificationService.scheduleNotification(
-        ++_timerState.lastId,
-        "Timer finished",
-        "last timer ${_timerState.timersSizes[timerFinishedMoments.last.first]} seconds, total duration = ${totalDuration.inHours} : ${totalDuration.inMinutes} : ${totalDuration.inSeconds}",
-        timerFinishedMoments.last.second,
-        sound: NotificationSounds.timersFinised
+      futures.add(
+        NotificationService.scheduleNotification(
+          _timerState.lastId + 1,
+          "Timer finished",
+          "last timer ${_timerState.timersSizes[timerFinishedMoments.last.first]} seconds, total duration = ${totalDuration.inHours} : ${totalDuration.inMinutes} : ${totalDuration.inSeconds}",
+          timerFinishedMoments.last.second,
+          sound: NotificationSounds.timersFinised
+        )
       );
+
+      _timerState.notificationIds.add(++_timerState.lastId);
     }
 
     if (putStaleToStorage) {
-      await _putStaleToStorage();
+      futures.add(_putStaleToStorage());
     }
+
+    return Future.wait(futures);
   }
 
   static Future<void> init() async {
@@ -253,8 +297,9 @@ class TimerController {
     }
     
     await _loadStateFromStorage();
-
     _inited = true;
+
+    background(false);
   }
 
   static ViewTimerState getViewTimerState() {
@@ -316,7 +361,7 @@ class TimerController {
       throw Exception(_notInitedMessage);
     }
 
-    _removeAllMessages(putStaleToStorage: false);
+    _removeNotifications(putStaleToStorage: false);
 
     var newState = TimerState();
     _timerState.passedBeforeStart = newState.passedBeforeStart;
@@ -329,7 +374,7 @@ class TimerController {
       throw Exception(_notInitedMessage);
     }
 
-    _removeAllMessages(putStaleToStorage: false);
+    _removeNotifications(putStaleToStorage: false);
     
     var newState = TimerState();
     _timerState.passedBeforeStart = newState.passedBeforeStart;
@@ -337,5 +382,62 @@ class TimerController {
     _timerState.timersSizes = newState.timersSizes;
 
     await _putStaleToStorage();
+  }
+
+
+  static late Timer _foregroundTimer;
+  static bool _inBackground = true;
+  static late EasyTimerState _prevTickState;
+  static const int _tickSizeMs = 10;
+  static final _player = AudioPlayer();
+  static Future background(bool goToBackground) async {
+    if (!_inited) {
+      throw Exception(_notInitedMessage);
+    }
+
+    if (_inBackground == goToBackground) {
+      return;
+    }
+
+    List<Future> futures = [];
+    if (goToBackground) {
+      _foregroundTimer.cancel();
+      _prevTickState = EasyTimerState();
+      futures.add(
+        _createNotifications()
+      );
+    } else {
+      futures.add(
+        _removeNotifications()
+      );
+      _prevTickState = _getEasyTimerState();
+      _foregroundTimer = Timer.periodic(const Duration (milliseconds: _tickSizeMs), (timer) async {
+        var currentTickState = _getEasyTimerState();
+
+        bool lastTick = _prevTickState.playing && currentTickState.finished;
+        bool canProcede = currentTickState.playing || lastTick;
+
+        if (canProcede) {
+          int gapMs = currentTickState.passedTime - _prevTickState.passedTime;
+          if (gapMs < 4 * _tickSizeMs) {
+            bool timerEnder = currentTickState.currentTimer > 0 && currentTickState.currentTimer - 1 == _prevTickState.currentTimer;
+            bool timerFinished = lastTick;
+            if (timerEnder) {
+              await _player.setVolume(0.7);
+              await _player.play(AssetSource("TimerEnded.mp3"));
+            } else if (timerFinished) {
+              await _player.setVolume(1);
+              await _player.play(AssetSource("TimersFinised.mp3"));
+            }
+          }
+        }
+
+        _prevTickState = currentTickState;
+      });
+    }
+
+    _inBackground = goToBackground;
+
+    return Future.wait(futures);
   }
 }
