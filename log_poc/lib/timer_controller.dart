@@ -374,6 +374,9 @@ class TimerController {
     var newState = TimerState();
     _timerState.passedBeforeStart = newState.passedBeforeStart;
     _timerState.startMoment = newState.startMoment;
+
+    _prevTickState = EasyTimerState();
+    
     await _putStaleToStorage();
   }
 
@@ -388,6 +391,8 @@ class TimerController {
     _timerState.passedBeforeStart = newState.passedBeforeStart;
     _timerState.startMoment = newState.startMoment;
     _timerState.timersSizes = newState.timersSizes;
+
+    _prevTickState = EasyTimerState();
 
     await _putStaleToStorage();
   }

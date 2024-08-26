@@ -119,7 +119,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
 
     int boxWidth = 20;
-    int boxHeight = 45;
     for (int i = 0; i < _currentState.timersValuesMs.length; i++)
     {
       bool used = _currentState.currentTimer >= 0 && i < _currentState.currentTimer || i == _currentState.currentTimer && _currentState.finished;
@@ -128,14 +127,13 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(width: boxWidth / 1, height: boxHeight / 1),
+            SizedBox(width: boxWidth / 1),
             Text(
               "${ _currentState.timersValuesMs[i] ~/ 1000 }",
               style: current ? currentTextStyle : used ? usedTextStyle : freshTextStyle,
             ),
             SizedBox(
               width: boxWidth / 1,
-              height: boxHeight / 1,
               child: Align(
                 alignment: Alignment.bottomLeft, // Элемент будет внизу по центру
                 child: Row(
@@ -197,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               padding: const EdgeInsets.all(10.0), // Adds padding on all sides
               child: SizedBox(
                 width: 300,
-                height: 6.0 * boxHeight,
+                height: 300,
                 child: Container(
                   color: const Color.fromARGB(171, 184, 206, 234), // Set background color here
                   child: SingleChildScrollView(
