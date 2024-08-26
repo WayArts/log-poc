@@ -282,7 +282,7 @@ class TimerController {
         NotificationService.scheduleNotification(
           _timerState.lastId + 1,
           "Timer finished",
-          "last timer ${_timerState.timersSizes[timerFinishedMoments.last.first]} seconds, \r\ntotal duration = ${totalDuration.inHours} : ${totalDuration.inMinutes % 60} : ${totalDuration.inSeconds % 60}",
+          "last timer ${_timerState.timersSizes[timerFinishedMoments.last.first]} seconds, \r\ntotal duration = ${totalDuration.inHours}h : ${totalDuration.inMinutes % 60}m : ${totalDuration.inSeconds % 60}s",
           timerFinishedMoments.last.second,
           sound: NotificationSounds.timersFinised
         )
