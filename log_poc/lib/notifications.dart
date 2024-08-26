@@ -106,12 +106,17 @@ class NotificationService {
             importance: Importance.max,
             priority: Priority.max,
             sound: RawResourceAndroidNotificationSound(androidSound),
+            styleInformation: BigTextStyleInformation(
+              body,
+            ),
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dateAndTime,
       );
+
+      print("FIND ME Notification $id sent");
     } catch (e) {
       print(e.toString());
     }

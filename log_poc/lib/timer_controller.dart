@@ -103,8 +103,7 @@ class TimerController {
 
   static Future<void> _putStaleToStorage() async {
     try {
-      await Localstore.instance.collection(_collectionName).delete();
-      await Localstore.instance.collection(_collectionName).doc().set(_timerState.toJson());
+      await Localstore.instance.collection(_collectionName).doc(docId).set(_timerState.toJson());
     } catch (e) {
       print(e.toString());
     }
@@ -291,7 +290,7 @@ class TimerController {
     return Future.wait(futures);
   }
 
-  static Future<void> init() async {
+  static Future<void> init({ bool backgroundMode = false }) async {
     if (_inited) {
       return;
     }
@@ -299,7 +298,7 @@ class TimerController {
     await _loadStateFromStorage();
     _inited = true;
 
-    background(false);
+    background(backgroundMode);
   }
 
   static ViewTimerState getViewTimerState() {
@@ -403,36 +402,47 @@ class TimerController {
     if (goToBackground) {
       _foregroundTimer.cancel();
       _prevTickState = EasyTimerState();
-      futures.add(
-        _createNotifications()
-      );
+
+      var currentTickState = _getEasyTimerState();
+
+      if (currentTickState.playing) {
+        futures.add(
+          _createNotifications()
+        );
+      }
     } else {
       futures.add(
         _removeNotifications()
       );
       _prevTickState = _getEasyTimerState();
       _foregroundTimer = Timer.periodic(const Duration (milliseconds: _tickSizeMs), (timer) async {
-        var currentTickState = _getEasyTimerState();
+        try {
+          var currentTickState = _getEasyTimerState();
+          var prevTickState = _prevTickState;
+          _prevTickState = currentTickState;
 
-        bool lastTick = _prevTickState.playing && currentTickState.finished;
-        bool canProcede = currentTickState.playing || lastTick;
+          bool lastTick = prevTickState.playing && currentTickState.finished;
+          bool canProcede = currentTickState.playing || lastTick;
 
-        if (canProcede) {
-          int gapMs = currentTickState.passedTime - _prevTickState.passedTime;
-          if (gapMs < 4 * _tickSizeMs) {
-            bool timerEnder = currentTickState.currentTimer > 0 && currentTickState.currentTimer - 1 == _prevTickState.currentTimer;
-            bool timerFinished = lastTick;
-            if (timerEnder) {
-              await _player.setVolume(0.7);
-              await _player.play(AssetSource("TimerEnded.mp3"));
-            } else if (timerFinished) {
-              await _player.setVolume(1);
-              await _player.play(AssetSource("TimersFinised.mp3"));
+          if (canProcede) {
+            int gapMs = currentTickState.passedTime - prevTickState.passedTime;
+            if (gapMs < 4 * _tickSizeMs) {
+              bool timerEnder = currentTickState.currentTimer > 0 && currentTickState.currentTimer - 1 == prevTickState.currentTimer;
+              bool timerFinished = lastTick;
+              if (timerEnder) {
+                await _player.setVolume(0.7);
+                await _player.play(AssetSource("TimerEnded.mp3"));
+                print("FIND ME Sound Played");
+              } else if (timerFinished) {
+                await _player.setVolume(1);
+                await _player.play(AssetSource("TimersFinised.mp3"));
+                print("FIND ME Sound Played");
+              }
             }
           }
+        } catch (e) {
+          print(e.toString());
         }
-
-        _prevTickState = currentTickState;
       });
     }
 
