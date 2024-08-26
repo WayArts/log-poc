@@ -46,7 +46,8 @@ class TimerState {
 }
 
 class EasyTimerState {
-  List<int> timersValues = [];
+  /// in milliseconds
+  List<int> timersValuesMs = [];
   List<int> timersSizes = [];
   /// in milliseconds
   int totalTimerSize = 0;
@@ -150,20 +151,27 @@ class TimerController {
     if (timerFinished) {
       state.currentTimer = _timerState.timersSizes.length - 1;
       state.playing = false;
-      state.timersValues = List.from(_timerState.timersSizes.map((elem) => 0));
+      state.timersValuesMs = List.from(_timerState.timersSizes.map((seconds) => 0));
     } else {
-      state.timersValues = List.from(_timerState.timersSizes);
+      state.timersValuesMs = List.from(_timerState.timersSizes.map((seconds) => seconds * 1000));
       
       if (passedTimeMs > 0) {
         state.currentTimer++;
-      }
+        
+        int timePointMs = 0;
+        while (true) {
+          if (timePointMs + state.timersValuesMs[state.currentTimer] <= passedTimeMs) {
+            timePointMs += state.timersValuesMs[state.currentTimer];
+            state.timersValuesMs[state.currentTimer] = 0;
+            state.currentTimer++;
+          }
+          else {
+            state.timersValuesMs[state.currentTimer] -= passedTimeMs - timePointMs;
+            timePointMs = passedTimeMs;
 
-      for (int i = 0; i < passedTimeMs; i += 1000) {
-        while (state.timersValues[state.currentTimer] == 0) {
-          state.currentTimer++;
+            break;
+          }
         }
-
-        state.timersValues[state.currentTimer]--;
       }
 
       state.playing = timerStarted;
@@ -274,7 +282,7 @@ class TimerController {
         NotificationService.scheduleNotification(
           _timerState.lastId + 1,
           "Timer finished",
-          "last timer ${_timerState.timersSizes[timerFinishedMoments.last.first]} seconds, total duration = ${totalDuration.inHours} : ${totalDuration.inMinutes} : ${totalDuration.inSeconds}",
+          "last timer ${_timerState.timersSizes[timerFinishedMoments.last.first]} seconds, total duration = ${totalDuration.inHours} : ${totalDuration.inMinutes % 60} : ${totalDuration.inSeconds % 60}",
           timerFinishedMoments.last.second,
           sound: NotificationSounds.timersFinised
         )
@@ -310,9 +318,10 @@ class TimerController {
 
 
     ViewTimerState state = ViewTimerState.init(
-      easyState.timersValues.toList(),
+      easyState.timersValuesMs.toList(),
       easyState.currentTimer,
-      easyState.playing
+      easyState.playing,
+      easyState.finished
     );
 
     return state;
@@ -387,7 +396,7 @@ class TimerController {
   static late Timer _foregroundTimer;
   static bool _inBackground = true;
   static late EasyTimerState _prevTickState;
-  static const int _tickSizeMs = 10;
+  static const int _tickSizeMs = 40;
   static final _player = AudioPlayer();
   static Future background(bool goToBackground) async {
     if (!_inited) {
@@ -426,8 +435,8 @@ class TimerController {
 
           if (canProcede) {
             int gapMs = currentTickState.passedTime - prevTickState.passedTime;
-            if (gapMs < 4 * _tickSizeMs) {
-              bool timerEnder = currentTickState.currentTimer > 0 && currentTickState.currentTimer - 1 == prevTickState.currentTimer;
+            if (gapMs < 5 * _tickSizeMs) {
+              bool timerEnder = currentTickState.currentTimer > 0 && currentTickState.currentTimer - 1 == prevTickState.currentTimer && !prevTickState.finished;
               bool timerFinished = lastTick;
               if (timerEnder) {
                 await _player.setVolume(0.7);

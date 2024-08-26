@@ -1,15 +1,18 @@
 class ViewTimerState {
-  List<int> timersValues = [];
+  /// in milliseconds
+  List<int> timersValuesMs = [];
   
   // -1 means didnt start
   int currentTimer = -1;
   bool playing = false;
+  bool finished = false;
 
   ViewTimerState();
 
   ViewTimerState.init(
-    this.timersValues,
+    this.timersValuesMs,
     this.currentTimer,
     this.playing,
+    this.finished,
   );
 }

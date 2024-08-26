@@ -96,25 +96,63 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     // var logger = Logger();
     // logger.d("_MyHomePageState build");
 
-    List<Text> timersViews = [];
+    List<Widget> timersViews = [];
     
     TextStyle usedTextStyle = const TextStyle(
-      color: Color.fromARGB(255, 216, 106, 98),
+      color: Color.fromARGB(203, 216, 106, 98),
       fontSize: 30,
     );
 
     TextStyle freshTextStyle = const TextStyle(
-      color: Color.fromARGB(255, 55, 117, 205),
+      color: Color.fromARGB(207, 55, 117, 205),
       fontSize: 30,
     );
 
-    for (int i = 0; i < _currentState.timersValues.length; i++)
+    TextStyle currentTextStyle = const TextStyle(
+      color: Color.fromARGB(255, 55, 117, 205),
+      fontSize: 35,
+    );
+
+    TextStyle currentTextStyleAfterDot = const TextStyle(
+      color: Color.fromARGB(191, 55, 117, 205),
+      fontSize: 15,
+    );
+
+    for (int i = 0; i < _currentState.timersValuesMs.length; i++)
     {
-      bool used = _currentState.currentTimer >= 0 && i <= _currentState.currentTimer;
+      bool used = _currentState.currentTimer >= 0 && i < _currentState.currentTimer || i == _currentState.currentTimer && _currentState.finished;
+      bool current = i == _currentState.currentTimer && !used;
       timersViews.add(
-        Text(
-          _currentState.timersValues[i].toString(),
-          style: used ? usedTextStyle : freshTextStyle,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(width: 20),
+            Text(
+              "${ _currentState.timersValuesMs[i] ~/ 1000 }",
+              style: current ? currentTextStyle : used ? usedTextStyle : freshTextStyle,
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Align(
+                  alignment: Alignment.bottomCenter, // Элемент будет внизу по центру
+                  child: SizedBox(
+                    width: 20,
+                    child: 
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: current && _currentState.timersValuesMs[i] % 1000 > 0 ? [
+                          Text(
+                            ".${ _currentState.timersValuesMs[i] % 1000 ~/ 100 }",
+                            style: currentTextStyleAfterDot,
+                          ),
+                        ] : []
+                      ),
+                  ),
+                ),
+              ]
+            ),    
+          ]
         )
       );
     }
