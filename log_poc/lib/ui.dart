@@ -118,6 +118,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       fontSize: 15,
     );
 
+    int boxWidth = 20;
+    int boxHeight = 45;
     for (int i = 0; i < _currentState.timersValuesMs.length; i++)
     {
       bool used = _currentState.currentTimer >= 0 && i < _currentState.currentTimer || i == _currentState.currentTimer && _currentState.finished;
@@ -126,36 +128,33 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(width: 20),
+            SizedBox(width: boxWidth / 1, height: boxHeight / 1),
             Text(
               "${ _currentState.timersValuesMs[i] ~/ 1000 }",
               style: current ? currentTextStyle : used ? usedTextStyle : freshTextStyle,
             ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Align(
-                  alignment: Alignment.bottomCenter, // Элемент будет внизу по центру
-                  child: SizedBox(
-                    width: 20,
-                    child: 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: current && _currentState.timersValuesMs[i] % 1000 > 0 ? [
-                          Text(
-                            ".${ _currentState.timersValuesMs[i] % 1000 ~/ 100 }",
-                            style: currentTextStyleAfterDot,
-                          ),
-                        ] : []
-                      ),
-                  ),
+            SizedBox(
+              width: boxWidth / 1,
+              height: boxHeight / 1,
+              child: Align(
+                alignment: Alignment.bottomLeft, // Элемент будет внизу по центру
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: current && _currentState.timersValuesMs[i] % 1000 > 0 ? [
+                    Text(
+                      ".${ _currentState.timersValuesMs[i] % 1000 ~/ 100 }",
+                      style: currentTextStyleAfterDot,
+                    ),
+                  ] : []
                 ),
-              ]
-            ),    
+              ),
+            ),
           ]
         )
       );
     }
+
+    bool withScroll = timersViews.length > 5;
 
     return Scaffold(
       appBar: AppBar(
@@ -165,7 +164,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
+          children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -193,6 +192,24 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                 ),
               ]
             ),
+            withScroll ?
+            Padding(
+              padding: const EdgeInsets.all(10.0), // Adds padding on all sides
+              child: SizedBox(
+                width: 300,
+                height: 6.0 * boxHeight,
+                child: Container(
+                  color: const Color.fromARGB(171, 184, 206, 234), // Set background color here
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: timersViews
+                    ),
+                  ),
+                ),
+              ),
+            )
+            :
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: timersViews
@@ -224,7 +241,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
               ]
             ),
           ],
-        ),
+        )
       ),
     );
   }
