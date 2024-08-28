@@ -1,4 +1,4 @@
-name: flutter_build_ipa_no_signin.yml
+name: flutter_build_ipa_no_signin
 
 on:
   workflow_dispatch:
