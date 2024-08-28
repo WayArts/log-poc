@@ -1,4 +1,4 @@
-name: iOS-ipa-build
+name: flutter_build_ipa_no_signin.yml
 
 on:
   workflow_dispatch:
