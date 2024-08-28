@@ -10,6 +10,8 @@
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		62737A862C79CA900026F933 /* TimerEnded.wav in Resources */ = {isa = PBXBuildFile; fileRef = 62737A842C79CA8F0026F933 /* TimerEnded.wav */; };
+		62737A872C79CA900026F933 /* TimersFinised.wav in Resources */ = {isa = PBXBuildFile; fileRef = 62737A852C79CA900026F933 /* TimersFinised.wav */; };
 		6416A7CA6FF97B2365E8BF45 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B38F4C598FBCDFDE7F93C69D /* Pods_RunnerTests.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		91BA2DE0CFDD44E1BD71A12A /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0864C1972ED9847D181EF10E /* Pods_Runner.framework */; };
@@ -49,6 +51,8 @@
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		47FB83920B053A2C38ADC45F /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		62737A842C79CA8F0026F933 /* TimerEnded.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = TimerEnded.wav; sourceTree = "<group>"; };
+		62737A852C79CA900026F933 /* TimersFinised.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = TimersFinised.wav; sourceTree = "<group>"; };
 		6C9EA2CF59CD037FE3D3F04B /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -118,6 +122,8 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				62737A842C79CA8F0026F933 /* TimerEnded.wav */,
+				62737A852C79CA900026F933 /* TimersFinised.wav */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
@@ -262,6 +268,8 @@
 				97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */,
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
+				62737A872C79CA900026F933 /* TimersFinised.wav in Resources */,
+				62737A862C79CA900026F933 /* TimerEnded.wav in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
