@@ -1,4 +1,4 @@
-name: iOS-ipa-build
+name: flutter_build_ipa_with_signing
 
 on:
   workflow_dispatch:
