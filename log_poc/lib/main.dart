@@ -5,6 +5,8 @@ import 'package:logger/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
 
+import './stress_component.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -43,6 +45,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _finished = false;
   bool _addedNewAfterFinish = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  final StressWidget _stressWidget = const StressWidget();
 
   @override
   void dispose() {
@@ -190,75 +194,90 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("збс"),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const SizedBox(
-                  width: 50,
-                ),
-                SizedBox(
-                  width: 300,
-                  child: TextField(
-                    controller: _controller,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter number of secconds',
-                      border: OutlineInputBorder(),
+    return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            bottom: const TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.timer)),
+                Tab(icon: Icon(Icons.monitor_heart_rounded)),
+              ],
+            ),
+            title: const Text('Sasha Human utility'),
+          ),
+          body: TabBarView(
+            children: [
+              Center(
+                child : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        const SizedBox(
+                          width: 50,
+                        ),
+                        SizedBox(
+                          width: 300,
+                          child: TextField(
+                            controller: _controller,
+                            decoration: const InputDecoration(
+                              labelText: 'Enter number of secconds',
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: <TextInputFormatter>[
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                          ),
+                        ),
+                        FloatingActionButton(
+                          onPressed: _addTimer,
+                          tooltip: 'addTimer',
+                          child: const Icon(Icons.add),
+                        ),
+                      ]
                     ),
-                    keyboardType: TextInputType.number,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly,
-                    ],
-                  ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: timersViews
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        FloatingActionButton(
+                          onPressed: _playStopTimer,
+                          tooltip: 'playStopTimer',
+                          child: Icon(_playing ? Icons.pause : Icons.play_arrow),
+                        ),
+                        const SizedBox(
+                          width: 25,
+                        ),
+                        FloatingActionButton(
+                          onPressed: _resetTimer,
+                          tooltip: 'resetTimer',
+                          child: const Icon(Icons.refresh),
+                        ),
+                        const SizedBox(
+                          width: 25,
+                        ),
+                        FloatingActionButton(
+                          onPressed: _clearTimer,
+                          tooltip: 'clearTimer',
+                          child: const Icon(Icons.clear),
+                        ),
+                      ]
+                    ),
+                  ],
                 ),
-                FloatingActionButton(
-                  onPressed: _addTimer,
-                  tooltip: 'addTimer',
-                  child: const Icon(Icons.add),
-                ),
-              ]
-            ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: timersViews
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                FloatingActionButton(
-                  onPressed: _playStopTimer,
-                  tooltip: 'playStopTimer',
-                  child: Icon(_playing ? Icons.pause : Icons.play_arrow),
-                ),
-                const SizedBox(
-                  width: 25,
-                ),
-                FloatingActionButton(
-                  onPressed: _resetTimer,
-                  tooltip: 'resetTimer',
-                  child: const Icon(Icons.refresh),
-                ),
-                const SizedBox(
-                  width: 25,
-                ),
-                FloatingActionButton(
-                  onPressed: _clearTimer,
-                  tooltip: 'clearTimer',
-                  child: const Icon(Icons.clear),
-                ),
-              ]
-            ),
-          ],
+              ),
+              Center(
+                child : _stressWidget
+              ),
+            ],
+          ),
         ),
-      ),
-    );
+      );
   }
 }
