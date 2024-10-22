@@ -26,6 +26,7 @@ class _StressWidgetState extends State<StressWidget> {
   int _stressBpm = _defaultStressBpm;
   bool _itIsStress = false;
   bool _connected = false;
+  bool _connecting = false;
 
   @override
   void dispose() {
@@ -105,9 +106,14 @@ class _StressWidgetState extends State<StressWidget> {
 
   void _connect()
   {
-    setState(() {
-      _connected = _bpmService.connect();
-    });
+    _connecting = true;
+
+    setState(() {});
+    () async {
+      _connected = await _bpmService.connect();
+      _connecting = false;
+      setState(() {});
+    }();
   }
 
   @override
@@ -157,14 +163,14 @@ class _StressWidgetState extends State<StressWidget> {
           height: 30,
         ),
         Text(
-          _connected ? _currentBpm.toString() : "disconnected",
-          style: _itIsStress || !_connected ? stressTextStyle : relaxTextStyle,
+          _connected ? _currentBpm.toString() : _connecting ? "..connecting.." : "disconnected",
+          style: _itIsStress || !_connected && !_connecting ? stressTextStyle : relaxTextStyle,
         ),
         const SizedBox(
           height: 30,
         ),
         Visibility(       
-          visible: !_connected,
+          visible: !_connected && !_connecting,
           child:
           RawMaterialButton(
             onPressed: _connect,
