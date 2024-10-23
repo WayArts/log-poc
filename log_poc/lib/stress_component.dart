@@ -21,6 +21,7 @@ class _StressWidgetState extends State<StressWidget> {
   final TextEditingController _controller = TextEditingController();
   final HeartBpmService _bpmService = HeartBpmService();
 
+  int soundDelaySec = 5;
 
   int _currentBpm = 0;
   int _stressBpm = _defaultStressBpm;
@@ -40,7 +41,7 @@ class _StressWidgetState extends State<StressWidget> {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(const Duration(milliseconds: 400), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
       setState(() {
         _updateBpm();
       });
@@ -57,6 +58,11 @@ class _StressWidgetState extends State<StressWidget> {
     _audioPlayer.play(AssetSource('TimersFinised.mp3'), volume: 1);
   }
 
+  void _disconnectedNotify()
+  {
+    _audioPlayer.play(AssetSource('TimersFinised.mp3'), volume: 1);
+  }
+
   void _updateBpm() {
     if (!_connected)
     {
@@ -66,13 +72,26 @@ class _StressWidgetState extends State<StressWidget> {
     int bpm = _bpmService.getBpm();
     _connected = bpm >= 0;
 
-    if (_connected)
+    if (!_connected)
     {
-      _currentBpm = bpm;
-      bool itIsStress = _currentBpm < _stressBpm;
+      _dropTimer();
+      _disconnectedNotify();
+      return;
+    }
 
-      if (_itIsStress != itIsStress)
+    _currentBpm = bpm;
+    bool itIsStress = _currentBpm >= _stressBpm;
+
+    if (_itIsStress != itIsStress)
+    {
+      _itIsStress = itIsStress;
+
+      Future.delayed(Duration(seconds: soundDelaySec), ()
       {
+        if (!_connected || _itIsStress != itIsStress)
+        {
+          return;
+        }
         if (itIsStress)
         {
           _stressStartedNotify();
@@ -81,9 +100,7 @@ class _StressWidgetState extends State<StressWidget> {
         {
           _stressFinishedNotify();
         }
-
-        _itIsStress = itIsStress;
-      }
+      });
     }
   }
 
@@ -106,11 +123,22 @@ class _StressWidgetState extends State<StressWidget> {
 
   void _connect()
   {
+    if (_connecting)
+    {
+      return;
+    }
+
     _connecting = true;
 
     setState(() {});
     () async {
       _connected = await _bpmService.connect();
+
+      if (_connected)
+      {
+        _startTimer();
+      }
+
       _connecting = false;
       setState(() {});
     }();

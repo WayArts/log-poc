@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
+//import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:bluetooth_low_energy/bluetooth_low_energy.dart';
 //import 'package:logging/logging.dart';
@@ -12,25 +13,30 @@ class HeartBpmService
   //late final StreamSubscription _stateChangedSubscription;
   late final StreamSubscription _discoveredSubscription;
 
-  String deviceName = "Polar Sense D8C5F924";
+  final String _deviceName = "Polar Sense D8C5F924";
+  final String _heartRateServiceUuid = "0000180d-0000-1000-8000-00805f9b34fb".toLowerCase(); // 0x180d "180D"
+  final String _heartRateMeasurementUuid = "00002a37-0000-1000-8000-00805f9b34fb".toLowerCase(); // 0x2A37 "2A37"
+  
   Peripheral? _peripheral;
+  GATTCharacteristic? _heartRateCharacteristic;
 
   bool _connected = false;
   bool _discovering = false;
   Completer<bool> _connectingResult = Completer<bool>();
+
+  int _lastBpm = 0;
   
   HeartBpmService()
     : _manager = CentralManager()
   {
-    // _stateChangedSubscription = _manager.stateChanged.listen((eventArgs) async {
-      
-    // });
-
     _discoveredSubscription = _manager.discovered.listen((eventArgs) {
       final peripheral = eventArgs.peripheral;
-      if (eventArgs.advertisement.name == deviceName && !_connected)
+      if (eventArgs.advertisement.name == _deviceName && !_connected)
       {
-        _connectTo(peripheral);
+        _peripheral = peripheral;
+        stopDiscovery();
+
+        _manager.connect(peripheral);
       }
     });
 
@@ -39,23 +45,64 @@ class HeartBpmService
         return;
       }
       if (eventArgs.state == ConnectionState.connected) {
-        _connected = true;
-        _connectingResult.complete(true);
-        log("FIND ME $deviceName");
+        _discoverHeartRateService();
       } else {
+        _connected = false;
         _connectingResult.complete(false);
+        _connectingResult = Completer<bool>();
       }
-
-      _connectingResult = Completer<bool>();
     });
 
   }
 
-  Future<void> _connectTo(Peripheral peripheral) async {
-    _peripheral = peripheral;
-    await stopDiscovery();
+  Future<void> _discoverHeartRateService() async {
+    final services = await _manager.discoverGATT(_peripheral!);
+    for (var service in services) {
+      var serviceUuid = service.uuid.toString().toLowerCase();
+      if (serviceUuid == _heartRateServiceUuid) {
+        final characteristics = service.characteristics;
+        for (var characteristic in characteristics) {
+          var characteristicUuid = characteristic.uuid.toString().toLowerCase();
+          if (characteristicUuid == _heartRateMeasurementUuid) {
+            _heartRateCharacteristic = characteristic;
+            _subscribeToHeartRateNotifications();
+            break;
+          }
+        }
+      }
+    }
+  }
 
-    _manager.connect(peripheral);
+  void _subscribeToHeartRateNotifications() {
+    if (_heartRateCharacteristic != null) {
+      _manager.setCharacteristicNotifyState(
+        _peripheral!,
+        _heartRateCharacteristic!,
+        state: true,
+      );
+      _manager.characteristicNotified.listen((eventArgs) {
+        if (eventArgs.characteristic == _heartRateCharacteristic) {
+          _processHeartRateData(eventArgs.value);
+        }
+      });
+    }
+  }
+
+  void _processHeartRateData(Uint8List data) {
+    if (!_connected)
+    {
+      _connected = true;
+      _connectingResult.complete(true);
+      _connectingResult = Completer<bool>();
+
+      log("FIND ME connected to $_deviceName");
+    }
+
+    bool isShort = (data[0] & 0x01) == 0;
+    int bpm = isShort ? data[1] : (data[2] << 8) | data[1];
+    //log("Heart Rate: $bpm bpm");
+
+    _lastBpm = bpm;
   }
 
   Future<bool> connect() async {
@@ -94,6 +141,11 @@ class HeartBpmService
 
   int getBpm()
   {
-    return 0;
+    if (!_connected)
+    {
+      return - 1;
+    }
+    
+    return _lastBpm;
   }
 }
