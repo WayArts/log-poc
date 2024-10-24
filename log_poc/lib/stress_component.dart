@@ -28,6 +28,7 @@ class _StressWidgetState extends State<StressWidget> {
   bool _itIsStress = false;
   bool _connected = false;
   bool _connecting = false;
+  bool _prevSoundPlayed = true;
 
   @override
   void dispose() {
@@ -50,17 +51,17 @@ class _StressWidgetState extends State<StressWidget> {
 
   void _stressStartedNotify()
   {
-    _audioPlayer.play(AssetSource('TimerEnded.mp3'), volume: 0.7);
+    _audioPlayer.play(AssetSource('StressStarted.wav'), volume: 0.3);
   }
 
   void _stressFinishedNotify()
   {
-    _audioPlayer.play(AssetSource('TimersFinised.mp3'), volume: 1);
+    _audioPlayer.play(AssetSource('StressFinished.wav'), volume: 0.3);
   }
 
   void _disconnectedNotify()
   {
-    _audioPlayer.play(AssetSource('TimersFinised.mp3'), volume: 1);
+    _audioPlayer.play(AssetSource('DeviceDisconnected.wav'), volume: 0.6);
   }
 
   void _updateBpm() {
@@ -86,12 +87,21 @@ class _StressWidgetState extends State<StressWidget> {
     {
       _itIsStress = itIsStress;
 
+      if (!_prevSoundPlayed)
+      {
+        _prevSoundPlayed = true;
+        return;
+      }
+
+      _prevSoundPlayed = false;
+
       Future.delayed(Duration(seconds: soundDelaySec), ()
       {
         if (!_connected || _itIsStress != itIsStress)
         {
           return;
         }
+
         if (itIsStress)
         {
           _stressStartedNotify();
@@ -100,6 +110,8 @@ class _StressWidgetState extends State<StressWidget> {
         {
           _stressFinishedNotify();
         }
+
+        _prevSoundPlayed = true;
       });
     }
   }

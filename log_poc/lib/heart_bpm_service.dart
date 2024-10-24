@@ -47,7 +47,11 @@ class HeartBpmService
       if (eventArgs.state == ConnectionState.connected) {
         _discoverHeartRateService();
       } else {
-        _connected = false;
+        if (_connected)
+        {
+          _connected = false;
+          log("FIND ME disconnected from $_deviceName");
+        }
         _connectingResult.complete(false);
         _connectingResult = Completer<bool>();
       }

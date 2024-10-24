@@ -65,6 +65,9 @@ flutter:
   assets:
     - assets/TimerEnded.mp3
     - assets/TimersFinised.mp3
+    - assets/StressFinished.wav
+    - assets/StressStarted.wav
+    - assets/DeviceDisconnected.wav
 
   # To add assets to your application, add an assets section, like this:
   # assets:
