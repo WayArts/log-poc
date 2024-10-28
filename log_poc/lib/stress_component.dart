@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,14 +22,16 @@ class _StressWidgetState extends State<StressWidget> {
   final TextEditingController _controller = TextEditingController();
   final HeartBpmService _bpmService = HeartBpmService();
 
-  int soundDelaySec = 5;
+  int soundDelaySec = 8;
 
   int _currentBpm = 0;
   int _stressBpm = _defaultStressBpm;
   bool _itIsStress = false;
   bool _connected = false;
   bool _connecting = false;
-  bool _prevSoundPlayed = true;
+  
+  DateTime _prevStressChangeMoment = DateTime(2000);
+  int _notifierId = 0;
 
   @override
   void dispose() {
@@ -51,17 +54,17 @@ class _StressWidgetState extends State<StressWidget> {
 
   void _stressStartedNotify()
   {
-    _audioPlayer.play(AssetSource('StressStarted.wav'), volume: 0.3);
+    _audioPlayer.play(AssetSource('StressStarted.wav'), volume: 0.1);
   }
 
   void _stressFinishedNotify()
   {
-    _audioPlayer.play(AssetSource('StressFinished.wav'), volume: 0.3);
+    _audioPlayer.play(AssetSource('StressFinished.wav'), volume: 0.1);
   }
 
   void _disconnectedNotify()
   {
-    _audioPlayer.play(AssetSource('DeviceDisconnected.wav'), volume: 0.6);
+    _audioPlayer.play(AssetSource('DeviceDisconnected.wav'), volume: 0.3);
   }
 
   void _updateBpm() {
@@ -87,17 +90,22 @@ class _StressWidgetState extends State<StressWidget> {
     {
       _itIsStress = itIsStress;
 
-      if (!_prevSoundPlayed)
+      _notifierId++;
+
+      var now = DateTime.now();
+
+      if (now.difference(_prevStressChangeMoment).inSeconds < soundDelaySec)
       {
-        _prevSoundPlayed = true;
         return;
       }
 
-      _prevSoundPlayed = false;
+      _prevStressChangeMoment = now;
+
+      var thisNotifierId = _notifierId;
 
       Future.delayed(Duration(seconds: soundDelaySec), ()
       {
-        if (!_connected || _itIsStress != itIsStress)
+        if (!_connected || thisNotifierId != _notifierId)
         {
           return;
         }
@@ -110,8 +118,6 @@ class _StressWidgetState extends State<StressWidget> {
         {
           _stressFinishedNotify();
         }
-
-        _prevSoundPlayed = true;
       });
     }
   }
