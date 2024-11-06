@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:developer';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audioplayers/audioplayers.dart';
+
 import 'heart_bpm_service.dart';
 
 class StressWidget extends StatefulWidget {
@@ -33,6 +34,8 @@ class _StressWidgetState extends State<StressWidget> {
   DateTime _prevStressChangeMoment = DateTime(2000);
   int _notifierId = 0;
 
+  double _currentSliderValue = 10;
+
   @override
   void dispose() {
     _dropTimer();
@@ -54,17 +57,17 @@ class _StressWidgetState extends State<StressWidget> {
 
   void _stressStartedNotify()
   {
-    _audioPlayer.play(AssetSource('StressStarted.wav'), volume: 0.1);
+    _audioPlayer.play(AssetSource('StressStarted.wav'), volume: _currentSliderValue / 100);
   }
 
   void _stressFinishedNotify()
   {
-    _audioPlayer.play(AssetSource('StressFinished.wav'), volume: 0.1);
+    _audioPlayer.play(AssetSource('StressFinished.wav'), volume: _currentSliderValue / 100);
   }
 
   void _disconnectedNotify()
   {
-    _audioPlayer.play(AssetSource('DeviceDisconnected.wav'), volume: 0.3);
+    _audioPlayer.play(AssetSource('DeviceDisconnected.wav'), volume: min((_currentSliderValue + 20) / 100, 1));
   }
 
   void _updateBpm() {
@@ -245,6 +248,33 @@ class _StressWidgetState extends State<StressWidget> {
           //     ),
           //   ),
           // ),
+        ),
+        Visibility(       
+          visible: _connected && !_connecting,
+          child:
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const SizedBox(
+                width: 55,
+                child: Text("volume:"),
+              ),
+              Slider(
+                value: _currentSliderValue,
+                max: 100,
+                divisions: 100,
+                label: _currentSliderValue.round().toString(),
+                onChanged: (double value) {
+                  setState(() {
+                    _currentSliderValue = value;
+                  });
+                },
+              ),
+              const SizedBox(
+                width: 55,
+              ),
+            ]
+          ),
         ),
       ],
     );
